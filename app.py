@@ -14,7 +14,7 @@ def get_bedrock_client():
     return boto3.client(service_name="bedrock-runtime", region_name="us-west-2")
 
 
-def generate_response(user_input, messages):
+def generate_response(messages):
     bedrock_client = get_bedrock_client()
     system_prompts = [{"text": CFG.system_prompt}]
 
@@ -32,41 +32,32 @@ def generate_response(user_input, messages):
     return response["output"]["message"]
 
 
+def display_history(messages):
+    for message in st.session_state.messages:
+        display_msg_content(message)
+
+
+def display_msg_content(message):
+    with st.chat_message(message["role"]):
+        st.write(content["text"] for content in message["content"])
+
+
 def main():
     st.title("Bedrock Conversation API Chatbot")
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Display chat messages from history on app rerun
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            print(message["content"])
-            st.write(content["text"] for content in message["content"])
+    display_history(st.session_state.messages)
 
-    user_input = st.text_input("あなた: ", "")
+    if prompt := st.chat_input("What's up?"):
+        input_msg = {"role": "user", "content": [{"text": prompt}]}
+        display_msg_content(input_msg)
+        st.session_state.messages.append(input_msg)
 
-    if st.button("送信") and user_input:
-        with st.chat_message("user"):
-            st.write(user_input)
-        st.session_state.messages.append(
-            {"role": "user", "content": [{"text": user_input}]}
-        )
-
-        response_msg = generate_response(user_input, st.session_state.messages)
-        with st.chat_message("assistant"):
-            st.write(content["text"] for content in response_msg["content"])
-        st.session_state.messages.append(
-            {"role": "assistant", "content": response_msg["content"]}
-        )
-
-        # st.write("アシスタント: ")
-        # for content in response_msg["content"]:
-        #     st.write(content["text"])
-
-    # 会話履歴を画面に表示
-    print("#" * 50)
-    print(st.session_state.messages)
+        response_msg = generate_response(st.session_state.messages)
+        display_msg_content(response_msg)
+        st.session_state.messages.append(response_msg)
 
 
 if __name__ == "__main__":
