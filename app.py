@@ -1,11 +1,5 @@
-import logging
-
 import boto3
 import streamlit as st
-from botocore.exceptions import ClientError
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 class CFG:
@@ -44,19 +38,23 @@ def generate_response(user_input, messages):
 def main():
     st.title("Bedrock Conversation API Chatbot")
 
-    messages = []
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
     user_input = st.text_input("あなた: ", "")
 
     if st.button("送信") and user_input:
-        messages.append({"role": "user", "content": [{"text": user_input}]})
-        assistant_response = generate_response(user_input, messages)
-        messages.append(assistant_response)
+        st.session_state.messages.append(
+            {"role": "user", "content": [{"text": user_input}]}
+        )
+        response_msg = generate_response(user_input, st.session_state.messages)
+        st.session_state.messages.append(response_msg)
 
         st.write("アシスタント: ")
-        for content in assistant_response["content"]:
+        for content in response_msg["content"]:
             st.write(content["text"])
         print("#" * 50)
-        print(messages)
+        print(st.session_state.messages)
 
 
 if __name__ == "__main__":
