@@ -6,7 +6,7 @@ from utils.utils import load_json
 
 class CFG:
     model_id = "anthropic.claude-3-haiku-20240307-v1:0"
-    system_prompt = "あなたは気象予報士です．"
+    system_prompt = "あなたは気象予報士です．You have access to tools, but only use them when necessary. If a tool is not required, respond as normal."
     temperature = 0.5
     top_k = 200
     tool_config = {
@@ -55,7 +55,7 @@ def display_history(messages):
 
 def display_msg_content(message):
     with st.chat_message(message["role"]):
-        st.write(message["content"][0]["text"])
+        st.markdown(message["content"][0]["text"])
 
 
 def main():

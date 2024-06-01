@@ -39,7 +39,7 @@ def display_history(messages):
 
 def display_msg_content(message):
     with st.chat_message(message["role"]):
-        st.write(message["content"][0]["text"])
+        st.markdown(message["content"][0]["text"])
 
 
 def main():
