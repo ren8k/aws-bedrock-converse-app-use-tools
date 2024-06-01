@@ -4,7 +4,7 @@ import streamlit as st
 
 class CFG:
     model_id = "anthropic.claude-3-haiku-20240307-v1:0"
-    system_prompt = "あなたは大量のデータにアクセスできる日本人のエコノミストです。"
+    system_prompt = "あなたは多くのデータにアクセス可能な経済学者です。"
     temperature = 0.5
     top_k = 200
 
@@ -39,7 +39,7 @@ def display_history(messages):
 
 def display_msg_content(message):
     with st.chat_message(message["role"]):
-        st.write(content["text"] for content in message["content"])
+        st.write(message["content"][0]["text"])
 
 
 def main():
@@ -58,6 +58,9 @@ def main():
         response_msg = generate_response(st.session_state.messages)
         display_msg_content(response_msg)
         st.session_state.messages.append(response_msg)
+
+    print("#" * 50)
+    print(st.session_state.messages)
 
 
 if __name__ == "__main__":
