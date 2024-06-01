@@ -43,19 +43,53 @@ def generate_response(messages):
         toolConfig=CFG.tool_config,
     )
 
-    return response["output"]["message"]
+    return response["output"]["message"], response["stopReason"]
 
 
 def display_history(messages):
-    for message in st.session_state.messages:
-        # 辞書messageにキーtextが存在する場合
+    for message in messages:
+        # exclude use tool result
         if "text" in message["content"][0]:
             display_msg_content(message)
 
 
 def display_msg_content(message):
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"][0]["text"])
+    # when request is tool use, sometimes not have text
+    if "text" in message["content"][0]:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"][0]["text"])
+
+
+def get_tool_use(response_msg):
+    # sometimes response_msg["content"] include text
+    return next((c["toolUse"] for c in response_msg["content"] if "toolUse" in c), None)
+
+
+def handle_tool_use(function_calling, response_msg):
+    display_msg_content(response_msg)
+    st.session_state.messages.append(response_msg)
+    # Get the tool name and arguments:
+    tool_name = function_calling["name"]
+    tool_args = function_calling["input"] or {}
+    # Run the tool:
+    print(f"Running ({tool_name}) tool...")
+    tool_response = getattr(ToolsList(), tool_name)(**tool_args)
+    # Add the tool result to the prompt:
+    st.session_state.messages.append(
+        {
+            "role": "user",
+            "content": [
+                {
+                    "toolResult": {
+                        "toolUseId": function_calling["toolUseId"],
+                        "content": [{"text": tool_response}],
+                    }
+                }
+            ],
+        }
+    )
+    response_msg, _ = generate_response(st.session_state.messages)
+    return response_msg
 
 
 def main():
@@ -71,42 +105,17 @@ def main():
         display_msg_content(input_msg)
         st.session_state.messages.append(input_msg)
 
-        response_msg = generate_response(st.session_state.messages)
-
-        # calling the tool
-        function_calling = next(
-            (c["toolUse"] for c in response_msg["content"] if "toolUse" in c), None
-        )
-        if function_calling:
-            display_msg_content(response_msg)
-            st.session_state.messages.append(response_msg)
-            # Get the tool name and arguments:
-            tool_name = function_calling["name"]
-            tool_args = function_calling["input"] or {}
-            # Run the tool:
-            print(f"Running ({tool_name}) tool...")
-            tool_response = getattr(ToolsList(), tool_name)(**tool_args)
-            # Add the tool result to the prompt:
-            st.session_state.messages.append(
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "toolResult": {
-                                "toolUseId": function_calling["toolUseId"],
-                                "content": [{"text": tool_response}],
-                            }
-                        }
-                    ],
-                }
-            )
-            response_msg = generate_response(st.session_state.messages)
-
+        response_msg, stop_reason = generate_response(st.session_state.messages)
+        if stop_reason == "tool_use":
+            function_calling = get_tool_use(response_msg)
+            response_msg = handle_tool_use(function_calling, response_msg)
         display_msg_content(response_msg)
         st.session_state.messages.append(response_msg)
 
-    print("#" * 50)
-    print(st.session_state.messages)
+    # from pprint import pprint
+
+    # print("#" * 50)
+    # pprint(st.session_state.messages)
 
 
 if __name__ == "__main__":
