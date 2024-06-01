@@ -1,6 +1,6 @@
 import boto3
 import streamlit as st
-from tools.tools import ToolsList
+from tools.tools_func import ToolsList
 from utils.utils import load_json
 
 
@@ -19,7 +19,7 @@ class CFG:
             # }
         },
     }
-    tool_config["tools"].append(load_json("./tools/get_weather.json"))
+    tool_config["tools"] = load_json("./tools/tools_definition.json")
 
 
 @st.cache_resource
