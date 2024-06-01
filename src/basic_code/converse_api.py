@@ -1,6 +1,7 @@
 import logging
 
 import boto3
+
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
@@ -42,9 +43,7 @@ def main():
     output_message = response["output"]["message"]
 
     print(f"Role: {output_message['role']}")
-
-    for content in output_message["content"]:
-        print(f"Text: {content['text']}")
+    print(f"Text: {output_message['content'][0]['text']}")
 
     print("#" * 50)
     messages.append(response["output"]["message"])
