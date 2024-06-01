@@ -1,22 +1,24 @@
-{
-  "toolSpec": {
-    "name": "get_weather",
-    "description": "Get weather of a location.",
-    "inputSchema": {
-      "json": {
-        "type": "object",
-        "properties": {
-          "city": {
-            "type": "string",
-            "description": "City of the location"
+[
+  {
+    "toolSpec": {
+      "name": "get_weather",
+      "description": "Get weather of a location.",
+      "inputSchema": {
+        "json": {
+          "type": "object",
+          "properties": {
+            "city": {
+              "type": "string",
+              "description": "City of the location"
+            },
+            "state": {
+              "type": "string",
+              "description": "State of the location"
+            }
           },
-          "state": {
-            "type": "string",
-            "description": "State of the location"
-          }
-        },
-        "required": ["city", "state"]
+          "required": ["city", "state"]
+        }
       }
     }
   }
-}
+]
