@@ -1,12 +1,25 @@
 import boto3
 import streamlit as st
+from tools.tools import ToolsList
+from utils.utils import load_json
 
 
 class CFG:
     model_id = "anthropic.claude-3-haiku-20240307-v1:0"
-    system_prompt = "あなたは多くのデータにアクセス可能な経済学者です。"
+    system_prompt = "あなたは気象予報士です．"
     temperature = 0.5
     top_k = 200
+    tool_config = {
+        "tools": [],
+        "toolChoice": {
+            "auto": {},
+            #'any': {},
+            #'tool': {
+            #    'name': 'get_weather'
+            # }
+        },
+    }
+    tool_config["tools"].append(load_json("./tools/get_weather.json"))
 
 
 @st.cache_resource
@@ -27,6 +40,7 @@ def generate_response(messages):
         system=system_prompts,
         inferenceConfig=inference_config,
         additionalModelRequestFields=additional_model_fields,
+        toolConfig=CFG.tool_config,
     )
 
     return response["output"]["message"]
@@ -34,7 +48,9 @@ def generate_response(messages):
 
 def display_history(messages):
     for message in st.session_state.messages:
-        display_msg_content(message)
+        # 辞書messageにキーtextが存在する場合
+        if "text" in message["content"][0]:
+            display_msg_content(message)
 
 
 def display_msg_content(message):
@@ -56,6 +72,36 @@ def main():
         st.session_state.messages.append(input_msg)
 
         response_msg = generate_response(st.session_state.messages)
+
+        # calling the tool
+        function_calling = next(
+            (c["toolUse"] for c in response_msg["content"] if "toolUse" in c), None
+        )
+        if function_calling:
+            display_msg_content(response_msg)
+            st.session_state.messages.append(response_msg)
+            # Get the tool name and arguments:
+            tool_name = function_calling["name"]
+            tool_args = function_calling["input"] or {}
+            # Run the tool:
+            print(f"Running ({tool_name}) tool...")
+            tool_response = getattr(ToolsList(), tool_name)(**tool_args)
+            # Add the tool result to the prompt:
+            st.session_state.messages.append(
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "toolResult": {
+                                "toolUseId": function_calling["toolUseId"],
+                                "content": [{"text": tool_response}],
+                            }
+                        }
+                    ],
+                }
+            )
+            response_msg = generate_response(st.session_state.messages)
+
         display_msg_content(response_msg)
         st.session_state.messages.append(response_msg)
 
