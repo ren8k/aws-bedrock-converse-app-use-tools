@@ -35,25 +35,6 @@ def get_bedrock_client():
     return boto3.client(service_name="bedrock-runtime", region_name="us-west-2")
 
 
-def generate_response(messages):
-    bedrock_client = get_bedrock_client()
-    system_prompts = [{"text": CFG.system_prompt}]
-
-    inference_config = {"temperature": CFG.temperature}
-    additional_model_fields = {"top_k": CFG.top_k}
-
-    response = bedrock_client.converse(
-        modelId=CFG.model_id,
-        messages=messages,
-        system=system_prompts,
-        inferenceConfig=inference_config,
-        additionalModelRequestFields=additional_model_fields,
-        toolConfig=CFG.tool_config,
-    )
-
-    return response["output"]["message"], response["stopReason"]
-
-
 def generate_streaming_response(messages):
     bedrock_client = get_bedrock_client()
     system_prompts = [{"text": CFG.system_prompt}]
@@ -88,6 +69,7 @@ def display_msg_content(message):
 
 
 def stream(response_stream):
+    # 本関数は，ストリーミングのレスポンスから，LLMの出力およびツールの入力を取得するための関数です．
     tool_use_input = ""
     for event in response_stream:
         print(event)
@@ -105,23 +87,22 @@ def stream(response_stream):
             CFG.tool_use_mode = True
 
 
+def tinking_stream():
+    message = "Using Tools..."
+    for word in message.split():
+        yield word + " "
+
+
 def display_streaming_msg_content(response_stream):
     if response_stream:
         with st.chat_message("assistant"):
             generated_text = st.write_stream(stream(response_stream))
             if not generated_text:
-                generated_text = "Using Tools..."
-
+                generated_text = st.write_stream(tinking_stream)
     return generated_text
 
 
-def get_tool_use(response_msg):
-    # sometimes response_msg["content"] include text
-    return next((c["toolUse"] for c in response_msg["content"] if "toolUse" in c), None)
-
-
-def handle_tool_use(function_calling, response_msg):
-    st.session_state.messages.append(response_msg)
+def handle_tool_use(function_calling):
     # Get the tool name and arguments:
     tool_name = function_calling["name"]
     tool_args = function_calling["input"] or {}
@@ -143,7 +124,7 @@ def handle_tool_use(function_calling, response_msg):
         }
     )
     response_msg = generate_streaming_response(st.session_state.messages)
-    generated_text = display_streaming_msg_content(response_msg)
+    generated_text: str = display_streaming_msg_content(response_msg)
     CFG.tool_use_mode = False
     return generated_text
 
@@ -162,16 +143,16 @@ def main():
         st.session_state.messages.append(input_msg)
 
         response_stream = generate_streaming_response(st.session_state.messages)
-        generated_text = display_streaming_msg_content(response_stream)
+        generated_text: str = display_streaming_msg_content(response_stream)
 
         # check tool use
         if CFG.tool_use_mode:
-            # function_calling = ["input"]
             output_msg = {
                 "role": "assistant",
                 "content": [{"text": generated_text}, {"toolUse": CFG.tool_use_args}],
             }
-            generated_text = handle_tool_use(CFG.tool_use_args, output_msg)
+            st.session_state.messages.append(output_msg)
+            generated_text = handle_tool_use(CFG.tool_use_args)
 
         output_msg = {"role": "assistant", "content": [{"text": generated_text}]}
         st.session_state.messages.append(output_msg)
