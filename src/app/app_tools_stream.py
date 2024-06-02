@@ -72,7 +72,6 @@ def stream(response_stream):
     # 本関数は，ストリーミングのレスポンスから，LLMの出力およびツールの入力を取得するための関数です．
     tool_use_input = ""
     for event in response_stream:
-        print(event)
         if "contentBlockDelta" in event:
             delta = event["contentBlockDelta"]["delta"]
             if "text" in delta:
@@ -123,6 +122,9 @@ def handle_tool_use(function_calling):
             ],
         }
     )
+    from pprint import pprint
+
+    pprint(st.session_state.messages)
     response_msg = generate_streaming_response(st.session_state.messages)
     generated_text: str = display_streaming_msg_content(response_msg)
     CFG.tool_use_mode = False
@@ -157,10 +159,10 @@ def main():
         output_msg = {"role": "assistant", "content": [{"text": generated_text}]}
         st.session_state.messages.append(output_msg)
 
-    from pprint import pprint
+    # from pprint import pprint
 
-    print("#" * 50)
-    pprint(st.session_state.messages)
+    # print("#" * 50)
+    # pprint(st.session_state.messages)
 
 
 if __name__ == "__main__":
