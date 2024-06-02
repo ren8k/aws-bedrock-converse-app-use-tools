@@ -1,3 +1,5 @@
+import json
+
 import boto3
 import streamlit as st
 from tools.tools_func import ToolsList
@@ -20,6 +22,12 @@ class CFG:
         },
     }
     tool_config["tools"] = load_json("./tools/tools_definition.json")
+    tool_use_args = {
+        "input": {},
+        "name": "",
+        "toolUseId": "",
+    }
+    tool_use_mode = False
 
 
 @st.cache_resource
@@ -59,7 +67,7 @@ def generate_streaming_response(messages):
         system=system_prompts,
         inferenceConfig=inference_config,
         additionalModelRequestFields=additional_model_fields,
-        # toolConfig=CFG.tool_config,
+        toolConfig=CFG.tool_config,
     )
 
     return response["stream"]
@@ -79,17 +87,31 @@ def display_msg_content(message):
             st.markdown(message["content"][0]["text"])
 
 
-# https://qiita.com/moritalous/items/cde191320abcfffacaca
 def stream(response_stream):
-    if response_stream:
-        for event in response_stream:
-            if "contentBlockDelta" in event:
-                yield event["contentBlockDelta"]["delta"]["text"]
+    tool_use_input = ""
+    for event in response_stream:
+        print(event)
+        if "contentBlockDelta" in event:
+            delta = event["contentBlockDelta"]["delta"]
+            if "text" in delta:
+                yield delta["text"]
+            if "toolUse" in delta:
+                tool_use_input += delta["toolUse"]["input"]
+        if "contentBlockStart" in event:
+            CFG.tool_use_args.update(event["contentBlockStart"]["start"]["toolUse"])
+
+        if "messageStop" in event and event["messageStop"]["stopReason"] == "tool_use":
+            CFG.tool_use_args["input"] = json.loads(tool_use_input)
+            CFG.tool_use_mode = True
 
 
 def display_streaming_msg_content(response_stream):
-    with st.chat_message("assistant"):
-        generated_text = st.write_stream(stream(response_stream))
+    if response_stream:
+        with st.chat_message("assistant"):
+            generated_text = st.write_stream(stream(response_stream))
+            if not generated_text:
+                generated_text = "Using Tools..."
+
     return generated_text
 
 
@@ -99,7 +121,6 @@ def get_tool_use(response_msg):
 
 
 def handle_tool_use(function_calling, response_msg):
-    display_msg_content(response_msg)
     st.session_state.messages.append(response_msg)
     # Get the tool name and arguments:
     tool_name = function_calling["name"]
@@ -121,8 +142,10 @@ def handle_tool_use(function_calling, response_msg):
             ],
         }
     )
-    response_msg, _ = generate_response(st.session_state.messages)
-    return response_msg
+    response_msg = generate_streaming_response(st.session_state.messages)
+    generated_text = display_streaming_msg_content(response_msg)
+    CFG.tool_use_mode = False
+    return generated_text
 
 
 def main():
@@ -139,10 +162,17 @@ def main():
         st.session_state.messages.append(input_msg)
 
         response_stream = generate_streaming_response(st.session_state.messages)
-        # if stop_reason == "tool_use":
-        #     function_calling = get_tool_use(response_stream)
-        #     response_stream = handle_tool_use(function_calling, response_stream)
         generated_text = display_streaming_msg_content(response_stream)
+
+        # check tool use
+        if CFG.tool_use_mode:
+            # function_calling = ["input"]
+            output_msg = {
+                "role": "assistant",
+                "content": [{"text": generated_text}, {"toolUse": CFG.tool_use_args}],
+            }
+            generated_text = handle_tool_use(CFG.tool_use_args, output_msg)
+
         output_msg = {"role": "assistant", "content": [{"text": generated_text}]}
         st.session_state.messages.append(output_msg)
 
