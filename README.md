@@ -15,10 +15,20 @@
 
 ## Qiita
 
-- [Converse API の登場により Bedrock に新モデルが登場したらいち早く試せる画面が完成しました](https://qiita.com/moritalous/items/cde191320abcfffacaca?utm_campaign=post_article&utm_medium=twitter&utm_source=twitter_share)
+- [Converse API の登場により Bedrock に新モデルが登場したらいち早く試せる画面が完成しました](https://qiita.com/moritalous/items/cde191320abcfffacaca)
 - [Amazon Bedrock に Use Tools（Function calling）が来た](https://qiita.com/moritalous/items/8b1a15a7dc583fa3a2e1?utm_campaign=post_article&utm_medium=twitter&utm_source=twitter_share)
 
 ## anthropics
 
 - [Tool use (function calling)](https://docs.anthropic.com/ja/docs/tool-use)
 - [course/ToolUse](https://github.com/anthropics/courses/tree/master/ToolUse)
+
+```json
+{
+  "toolUse": {
+    "input": { "sign": "WZPZ" },
+    "name": "top_song",
+    "toolUseId": "tooluse_xM0z4SnRS8SCh8VmzsAg_w"
+  }
+}
+```
