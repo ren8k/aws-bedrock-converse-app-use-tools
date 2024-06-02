@@ -1,3 +1,6 @@
+- streaming は，Claude しか対応してない
+-
+
 ## AWS Documentation
 
 - [Use the Converse API](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html)
