@@ -5,7 +5,7 @@ import streamlit as st
 
 
 def chat_interface(bedrock, cfg):
-    st.title("Bedrock Conversation API Chatbot")
+    st.title("Bedrock ConverseStream API Chatbot")
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
