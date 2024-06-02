@@ -7,16 +7,16 @@
         "json": {
           "type": "object",
           "properties": {
+            "prefecture": {
+              "type": "string",
+              "description": "prefecture of the location"
+            },
             "city": {
               "type": "string",
-              "description": "City of the location"
-            },
-            "state": {
-              "type": "string",
-              "description": "State of the location"
+              "description": "city of the location"
             }
           },
-          "required": ["city", "state"]
+          "required": ["prefecture", "city"]
         }
       }
     }
