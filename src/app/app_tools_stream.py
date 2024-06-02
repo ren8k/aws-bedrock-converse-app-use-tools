@@ -59,7 +59,7 @@ def generate_streaming_response(messages):
         system=system_prompts,
         inferenceConfig=inference_config,
         additionalModelRequestFields=additional_model_fields,
-        toolConfig=CFG.tool_config,
+        # toolConfig=CFG.tool_config,
     )
 
     return response["stream"]
