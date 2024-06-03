@@ -23,14 +23,13 @@ class BedrockClient:
             "temperature": cfg.temperature,
             "topP": cfg.top_p,
         }
-        # additional_model_fields = {"top_k": cfg.top_k}
 
         response = self.client.converse_stream(
             modelId=cfg.model_id,
             messages=messages,
             system=system_prompts,
             inferenceConfig=inference_config,
-            # additionalModelRequestFields=additional_model_fields,
+            # additionalModelRequestFields=cfg.additional_model_fields,
             toolConfig=cfg.tool_config,
         )
 
