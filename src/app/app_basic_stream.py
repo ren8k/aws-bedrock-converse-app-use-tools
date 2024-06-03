@@ -46,6 +46,25 @@ def generate_response(messages):
     return response["output"]["message"], response["stopReason"]
 
 
+def generate_streaming_response(messages):
+    bedrock_client = get_bedrock_client()
+    system_prompts = [{"text": CFG.system_prompt}]
+
+    inference_config = {"temperature": CFG.temperature}
+    additional_model_fields = {"top_k": CFG.top_k}
+
+    response = bedrock_client.converse_stream(
+        modelId=CFG.model_id,
+        messages=messages,
+        system=system_prompts,
+        inferenceConfig=inference_config,
+        additionalModelRequestFields=additional_model_fields,
+        # toolConfig=CFG.tool_config,
+    )
+
+    return response["stream"]
+
+
 def display_history(messages):
     for message in messages:
         # exclude use tool result
@@ -58,6 +77,20 @@ def display_msg_content(message):
     if "text" in message["content"][0]:
         with st.chat_message(message["role"]):
             st.markdown(message["content"][0]["text"])
+
+
+# https://qiita.com/moritalous/items/cde191320abcfffacaca
+def stream(response_stream):
+    if response_stream:
+        for event in response_stream:
+            if "contentBlockDelta" in event:
+                yield event["contentBlockDelta"]["delta"]["text"]
+
+
+def display_streaming_msg_content(response_stream):
+    with st.chat_message("assistant"):
+        generated_text = st.write_stream(stream(response_stream))
+    return generated_text
 
 
 def get_tool_use(response_msg):
@@ -105,17 +138,18 @@ def main():
         display_msg_content(input_msg)
         st.session_state.messages.append(input_msg)
 
-        response_msg, stop_reason = generate_response(st.session_state.messages)
-        if stop_reason == "tool_use":
-            function_calling = get_tool_use(response_msg)
-            response_msg = handle_tool_use(function_calling, response_msg)
-        display_msg_content(response_msg)
-        st.session_state.messages.append(response_msg)
+        response_stream = generate_streaming_response(st.session_state.messages)
+        # if stop_reason == "tool_use":
+        #     function_calling = get_tool_use(response_stream)
+        #     response_stream = handle_tool_use(function_calling, response_stream)
+        generated_text = display_streaming_msg_content(response_stream)
+        output_msg = {"role": "assistant", "content": [{"text": generated_text}]}
+        st.session_state.messages.append(output_msg)
 
-    # from pprint import pprint
+    from pprint import pprint
 
-    # print("#" * 50)
-    # pprint(st.session_state.messages)
+    print("#" * 50)
+    pprint(st.session_state.messages)
 
 
 if __name__ == "__main__":

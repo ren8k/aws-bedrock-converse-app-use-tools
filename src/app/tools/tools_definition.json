@@ -1,0 +1,24 @@
+[
+  {
+    "toolSpec": {
+      "name": "get_weather",
+      "description": "Get weather of a location.",
+      "inputSchema": {
+        "json": {
+          "type": "object",
+          "properties": {
+            "prefecture": {
+              "type": "string",
+              "description": "prefecture of the location"
+            },
+            "city": {
+              "type": "string",
+              "description": "city of the location"
+            }
+          },
+          "required": ["prefecture", "city"]
+        }
+      }
+    }
+  }
+]

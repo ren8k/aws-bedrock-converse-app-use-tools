@@ -1,3 +1,5 @@
+import json
+
 import boto3
 import streamlit as st
 from tools.tools_func import ToolsList
@@ -20,6 +22,12 @@ class CFG:
         },
     }
     tool_config["tools"] = load_json("./tools/tools_definition.json")
+    tool_use_args = {
+        "input": {},
+        "name": "",
+        "toolUseId": "",
+    }
+    tool_use_mode = False
 
 
 @st.cache_resource
@@ -27,14 +35,14 @@ def get_bedrock_client():
     return boto3.client(service_name="bedrock-runtime", region_name="us-west-2")
 
 
-def generate_response(messages):
+def generate_streaming_response(messages):
     bedrock_client = get_bedrock_client()
     system_prompts = [{"text": CFG.system_prompt}]
 
     inference_config = {"temperature": CFG.temperature}
     additional_model_fields = {"top_k": CFG.top_k}
 
-    response = bedrock_client.converse(
+    response = bedrock_client.converse_stream(
         modelId=CFG.model_id,
         messages=messages,
         system=system_prompts,
@@ -43,7 +51,7 @@ def generate_response(messages):
         toolConfig=CFG.tool_config,
     )
 
-    return response["output"]["message"], response["stopReason"]
+    return response["stream"]
 
 
 def display_history(messages):
@@ -60,14 +68,40 @@ def display_msg_content(message):
             st.markdown(message["content"][0]["text"])
 
 
-def get_tool_use(response_msg):
-    # sometimes response_msg["content"] include text
-    return next((c["toolUse"] for c in response_msg["content"] if "toolUse" in c), None)
+def stream(response_stream):
+    # 本関数は，ストリーミングのレスポンスから，LLMの出力およびツールの入力を取得するための関数です．
+    tool_use_input = ""
+    for event in response_stream:
+        if "contentBlockDelta" in event:
+            delta = event["contentBlockDelta"]["delta"]
+            if "text" in delta:
+                yield delta["text"]
+            if "toolUse" in delta:
+                tool_use_input += delta["toolUse"]["input"]
+        if "contentBlockStart" in event:
+            CFG.tool_use_args.update(event["contentBlockStart"]["start"]["toolUse"])
+
+        if "messageStop" in event and event["messageStop"]["stopReason"] == "tool_use":
+            CFG.tool_use_args["input"] = json.loads(tool_use_input)
+            CFG.tool_use_mode = True
 
 
-def handle_tool_use(function_calling, response_msg):
-    display_msg_content(response_msg)
-    st.session_state.messages.append(response_msg)
+def tinking_stream():
+    message = "Using Tools..."
+    for word in message.split():
+        yield word + " "
+
+
+def display_streaming_msg_content(response_stream):
+    if response_stream:
+        with st.chat_message("assistant"):
+            generated_text = st.write_stream(stream(response_stream))
+            if not generated_text:
+                generated_text = st.write_stream(tinking_stream)
+    return generated_text
+
+
+def handle_tool_use(function_calling):
     # Get the tool name and arguments:
     tool_name = function_calling["name"]
     tool_args = function_calling["input"] or {}
@@ -88,8 +122,13 @@ def handle_tool_use(function_calling, response_msg):
             ],
         }
     )
-    response_msg, _ = generate_response(st.session_state.messages)
-    return response_msg
+    from pprint import pprint
+
+    pprint(st.session_state.messages)
+    response_msg = generate_streaming_response(st.session_state.messages)
+    generated_text: str = display_streaming_msg_content(response_msg)
+    CFG.tool_use_mode = False
+    return generated_text
 
 
 def main():
@@ -105,12 +144,20 @@ def main():
         display_msg_content(input_msg)
         st.session_state.messages.append(input_msg)
 
-        response_msg, stop_reason = generate_response(st.session_state.messages)
-        if stop_reason == "tool_use":
-            function_calling = get_tool_use(response_msg)
-            response_msg = handle_tool_use(function_calling, response_msg)
-        display_msg_content(response_msg)
-        st.session_state.messages.append(response_msg)
+        response_stream = generate_streaming_response(st.session_state.messages)
+        generated_text: str = display_streaming_msg_content(response_stream)
+
+        # check tool use
+        if CFG.tool_use_mode:
+            output_msg = {
+                "role": "assistant",
+                "content": [{"text": generated_text}, {"toolUse": CFG.tool_use_args}],
+            }
+            st.session_state.messages.append(output_msg)
+            generated_text = handle_tool_use(CFG.tool_use_args)
+
+        output_msg = {"role": "assistant", "content": [{"text": generated_text}]}
+        st.session_state.messages.append(output_msg)
 
     # from pprint import pprint
 
