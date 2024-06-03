@@ -14,7 +14,7 @@ def chat_interface(bedrock, cfg):
     if prompt := st.chat_input("What's up?"):
         input_msg = {"role": "user", "content": [{"text": prompt}]}
         display_msg_content(input_msg)
-        append_message(input_msg)
+        update_chat_history(input_msg)
 
         response_stream = bedrock.generate_streaming_response(st.session_state.messages)
         generated_text: str = display_streaming_msg_content(response_stream, cfg)
@@ -25,10 +25,10 @@ def chat_interface(bedrock, cfg):
                 "role": "assistant",
                 "content": [{"text": generated_text}, {"toolUse": cfg.tool_use_args}],
             }
-            append_message(output_msg)
+            update_chat_history(output_msg)
 
             tool_result_msg = execute_tool(bedrock, cfg)
-            append_message(tool_result_msg)
+            update_chat_history(tool_result_msg)
 
             response_stream = bedrock.generate_streaming_response(
                 st.session_state.messages
@@ -37,7 +37,7 @@ def chat_interface(bedrock, cfg):
             cfg.tool_use_mode = False
 
         output_msg = {"role": "assistant", "content": [{"text": generated_text}]}
-        append_message(output_msg)
+        update_chat_history(output_msg)
         # print_history()
 
 
@@ -48,7 +48,7 @@ def print_history():
     pprint(st.session_state.messages)
 
 
-def append_message(message):
+def update_chat_history(message):
     st.session_state.messages.append(copy.deepcopy(message))
 
 
