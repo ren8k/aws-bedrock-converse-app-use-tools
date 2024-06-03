@@ -75,7 +75,7 @@ class ChatInterface:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"][0]["text"])
 
-    def stream(self, response_stream):
+    def parse_stream(self, response_stream):
         # 本関数は，ストリーミングのレスポンスから，LLMの出力およびツールの入力を取得するための関数です．
         tool_use_input = ""
         for event in response_stream:
@@ -105,7 +105,7 @@ class ChatInterface:
     def display_streaming_msg_content(self, response_stream):
         if response_stream:
             with st.chat_message("assistant"):
-                generated_text = st.write_stream(self.stream(response_stream))
+                generated_text = st.write_stream(self.parse_stream(response_stream))
                 if not generated_text:
                     generated_text = st.write_stream(self.tinking_stream())
         return generated_text
