@@ -14,3 +14,4 @@ def sidebar(cfg):
         cfg.temperature = st.slider("Temperature", 0.0, 1.0, 0.1, 0.2)
         cfg.top_p = st.slider("Top P", 0.0, 1.0, 0.999)
         cfg.system_prompt = st.text_area("System Prompt", cfg.system_prompt)
+    return cfg

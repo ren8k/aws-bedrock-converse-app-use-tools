@@ -9,7 +9,7 @@ def main():
     st.set_page_config(page_title="Bedrock Chatbot", layout="wide")
 
     cfg = Config()
-    sidebar(cfg)
+    cfg = sidebar(cfg)
     bedrock_client = BedrockClient(cfg.region)
     chat_interface = ChatInterface(bedrock_client, cfg)
     chat_interface.run()
