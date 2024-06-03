@@ -54,7 +54,7 @@ class ChatInterface:
 
             output_msg = {"role": "assistant", "content": [{"text": generated_text}]}
             self.update_chat_history(output_msg)
-            self.print_history()
+            # self.print_history()
 
     def print_history(self):
         from pprint import pprint
