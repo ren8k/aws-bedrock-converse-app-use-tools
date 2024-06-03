@@ -16,10 +16,11 @@ class BedrockClient:
 
     def generate_streaming_response(self, messages, cfg):
         system_prompts = [{"text": cfg.system_prompt}]
+        stop_sequences = [s.strip() for s in cfg.stop_sequences.split(",")]
 
         inference_config = {
             "maxTokens": cfg.max_tokens,
-            "stopSequences": [cfg.stop_sequences],
+            "stopSequences": stop_sequences,
             "temperature": cfg.temperature,
             "topP": cfg.top_p,
         }

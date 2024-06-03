@@ -9,7 +9,7 @@ class Config:
 
     # Converse API parameters
     max_tokens = 300
-    stopSequences = "</stop>"
+    stop_sequences = "</stop>"
     temperature = 0.5
     top_p = 0.999
     top_k = 200
