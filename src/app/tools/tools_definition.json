@@ -20,5 +20,24 @@
         }
       }
     }
+  },
+
+  {
+    "toolSpec": {
+      "name": "web_search",
+      "description": "Search a term in the public Internet. Useful for getting up to date information.",
+      "inputSchema": {
+        "json": {
+          "type": "object",
+          "properties": {
+            "search_term": {
+              "type": "string",
+              "description": "Term to search in the Internet"
+            }
+          },
+          "required": ["search_term"]
+        }
+      }
+    }
   }
 ]
