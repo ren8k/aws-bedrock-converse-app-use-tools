@@ -1,3 +1,7 @@
+- Haiku は Tools を利用してしまう
+- Sonnet が良いかも
+- Opus は CoT してくる．（<thinking>タグを必ず使ってくる）
+
 - streaming は，Claude しか対応してない
 - model によっては，stop sequence の指定の仕方が異なるっぽい
   - 折角 Converse API でモデル毎の推論パラメータを気にしなくて良いと謳っているが，，
@@ -37,6 +41,13 @@ Traceback (most recent call last):
     return getattr(ToolsList(), tool_name)(**tool_args)
 TypeError: get_weather() missing 1 required positional argument: 'city'
 
+```
+
+- Opus だと CoT の内容が勝手に出力される
+- Converse API を叩きまくると，以下のエラーが出る
+
+```
+botocore.exceptions.EventStreamError: An error occurred (throttlingException) when calling the ConverseStream operation: Too many requests, please wait before trying again. You have sent too many requests.  Wait before trying again.
 ```
 
 ## AWS Documentation
