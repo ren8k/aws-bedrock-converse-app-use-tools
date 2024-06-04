@@ -2,7 +2,7 @@ import streamlit as st
 from components.chat_interface import ChatInterfaceStreaming
 from components.chat_interface_standard import ChatInterfaceStandard
 from components.sidebar import sidebar
-from config import Config
+from config.config import Config
 from llm.bedrock_client import BedrockClient
 
 
