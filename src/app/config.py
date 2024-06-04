@@ -18,13 +18,13 @@ class Config:
     # Tool config
     tool_config = {
         "tools": [],
-        "toolChoice": {
-            "auto": {},
-            #'any': {},
-            #'tool': {
-            #    'name': 'get_weather'
-            # }
-        },
+        # "toolChoice": {
+        #     "auto": {},
+        # 'any': {},
+        # 'tool': {
+        #    'name': 'get_weather'
+        # }
+        # },
     }
     tools_definition_path = "./tools/tools_definition.json"
     tool_config["tools"] = load_json(tools_definition_path)
@@ -35,6 +35,12 @@ class Config:
         "anthropic.claude-3-haiku-20240307-v1:0",
         "anthropic.claude-3-sonnet-20240229-v1:0",
         "anthropic.claude-3-opus-20240229-v1:0",
-        # "cohere.command-r-plus-v1:0",
-        # "mistral.mixtral-8x7b-instruct-v0:1",
+        "cohere.command-r-plus-v1:0",
+        "mistral.mistral-large-2402-v1:0",
+        "meta.llama3-70b-instruct-v1:0",
+        "amazon.titan-text-premier-v1:0",
+        "amazon.titan-text-lite-v1",
     ]
+    use_streaming = True
+    use_tool_use = True
+    use_system_prompt = True
