@@ -1,5 +1,15 @@
 - streaming は，Claude しか対応してない
--
+- model によっては，stop sequence の指定の仕方が異なるっぽい
+  - 折角 Converse API でモデル毎の推論パラメータを気にしなくて良いと謳っているが，，
+  - 例えば，Amazon Titan とかで実験すると以下のエラー．
+
+```
+ValidationException: An error occurred (ValidationException) when calling the Converse operation: The model returned the following errors: Malformed input request: string [</stop>] does not match pattern ^(\|+|User:)$, please reformat your input and try again.
+```
+
+```
+botocore.errorfactory.ValidationException: An error occurred (ValidationException) when calling the Converse operation: The toolConfig field must be defined when using toolUse and toolResult content blocks.
+```
 
 ## AWS Documentation
 
