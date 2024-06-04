@@ -1,6 +1,6 @@
 import streamlit as st
-from components.chat_interface import ChatInterfaceStreaming
 from components.chat_interface_standard import ChatInterfaceStandard
+from components.chat_interface_streaming import ChatInterfaceStreaming
 from components.sidebar import sidebar
 from config.config import Config
 from llm.bedrock_client import BedrockClient
