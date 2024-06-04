@@ -60,7 +60,7 @@ def display_msg_content(message):
             st.markdown(message["content"][0]["text"])
 
 
-def get_tool_use(response_msg):
+def get_tool_use_args(response_msg):
     # sometimes response_msg["content"] include text
     return next((c["toolUse"] for c in response_msg["content"] if "toolUse" in c), None)
 
@@ -107,8 +107,8 @@ def main():
 
         response_msg, stop_reason = generate_response(st.session_state.messages)
         if stop_reason == "tool_use":
-            function_calling = get_tool_use(response_msg)
-            response_msg = handle_tool_use(function_calling, response_msg)
+            tool_use_args = get_tool_use_args(response_msg)
+            response_msg = handle_tool_use(tool_use_args, response_msg)
         display_msg_content(response_msg)
         st.session_state.messages.append(response_msg)
 
