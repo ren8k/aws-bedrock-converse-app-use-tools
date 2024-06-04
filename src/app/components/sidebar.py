@@ -9,9 +9,11 @@ def sidebar(cfg):
         cfg.model_id = st.selectbox("model", cfg.MODEL_LIST)
 
         st.sidebar.header("Inference parameters")
-        cfg.max_tokens = st.number_input("Max Tokens", cfg.max_tokens)
+        cfg.max_tokens = st.number_input("Max Tokens", value=cfg.max_tokens)
+        if "amazon" in cfg.model_id:
+            cfg.stop_sequences = "User:"
         cfg.stop_sequences = st.text_area(
-            "Stop Sequences (Separate with commas)", "</stop>"
+            "Stop Sequences (Separate with commas)", cfg.stop_sequences
         )
         cfg.temperature = st.slider("Temperature", 0.0, 1.0, cfg.temperature, 0.1)
         cfg.top_p = st.slider("Top P", 0.0, 1.0, cfg.top_p)
