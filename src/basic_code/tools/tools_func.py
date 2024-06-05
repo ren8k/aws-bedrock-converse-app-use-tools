@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from googlesearch import search
 
 
+# https://github.com/aws-samples/amazon-bedrock-samples/blob/b64902625ea8ade362c0f7d1978428cecdcf47ed/function-calling/Function%20calling%20tool%20use%20with%20Converse%20API.ipynb#L7
 class ToolsList:
     # Define our get_weather tool function...
     def get_weather(self, prefecture, city):
@@ -11,7 +12,6 @@ class ToolsList:
         return result
 
     # Define our web_search tool function...
-    # reference: https://github.com/aws-samples/amazon-bedrock-samples/blob/b64902625ea8ade362c0f7d1978428cecdcf47ed/function-calling/Function%20calling%20tool%20use%20with%20Converse%20API.ipynb#L7
     def web_search(self, search_term):
         results = []
         response_list = []
