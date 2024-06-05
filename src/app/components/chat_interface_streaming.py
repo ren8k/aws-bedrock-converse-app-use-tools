@@ -1,7 +1,9 @@
 import copy
 import json
+from pprint import pprint
 
 import streamlit as st
+from tools.tools_func import ToolsList
 
 
 class ChatInterfaceStreaming:
@@ -34,13 +36,9 @@ class ChatInterfaceStreaming:
 
             # check tool use
             if self.tool_use_mode:
-                output_msg = {
-                    "role": "assistant",
-                    "content": [
-                        {"text": generated_text},
-                        {"toolUse": self.tool_use_args},
-                    ],
-                }
+                output_msg = self.create_tool_request_msg(
+                    generated_text, self.tool_use_args
+                )
                 self.update_chat_history(output_msg)
 
                 tool_result_msg = self.execute_tool()
@@ -54,13 +52,11 @@ class ChatInterfaceStreaming:
 
             output_msg = {"role": "assistant", "content": [{"text": generated_text}]}
             self.update_chat_history(output_msg)
-            self.print_history()
+            self.print_history(st.session_state.messages)
 
-    def print_history(self):
-        from pprint import pprint
-
+    def print_history(self, history):
         print("#" * 50)
-        pprint(st.session_state.messages)
+        pprint(history)
 
     def update_chat_history(self, message):
         st.session_state.messages.append(copy.deepcopy(message))
@@ -76,7 +72,7 @@ class ChatInterfaceStreaming:
                 st.markdown(message["content"][0]["text"])
 
     def parse_stream(self, response_stream):
-        # 本関数は，ストリーミングのレスポンスから，LLMの出力およびツールの入力を取得するための関数です．
+        #  extract the LLM's output and tool's input from the streaming response.
         tool_use_input = ""
         for event in response_stream:
             if "contentBlockDelta" in event:
@@ -110,6 +106,16 @@ class ChatInterfaceStreaming:
                     generated_text = st.write_stream(self.tinking_stream())
         return generated_text
 
+    def create_tool_request_msg(self, generated_text, tool_use_args):
+        # tool_use_args includes name, input, and toolUseId
+        return {
+            "role": "assistant",
+            "content": [
+                {"text": generated_text},
+                {"toolUse": tool_use_args},
+            ],
+        }
+
     def create_tool_result_msg(self, tool_use_id, tool_response):
         return {
             "role": "user",
@@ -123,11 +129,14 @@ class ChatInterfaceStreaming:
             ],
         }
 
+    def run_tool(self, tool_name, tool_args):
+        return getattr(ToolsList(), tool_name)(**tool_args)
+
     def execute_tool(self):
         tool_name = self.tool_use_args["name"]
         tool_args = self.tool_use_args["input"] or {}
         tool_use_id = self.tool_use_args["toolUseId"]
         print(f"Running ({tool_name}) tool...")
-        tool_response = self.bedrock.run_tool(tool_name, tool_args)
+        tool_response = self.run_tool(tool_name, tool_args)
         tool_result_msg = self.create_tool_result_msg(tool_use_id, tool_response)
         return tool_result_msg
