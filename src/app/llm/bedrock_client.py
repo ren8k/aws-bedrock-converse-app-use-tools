@@ -2,7 +2,6 @@ import json
 
 import boto3
 import streamlit as st
-from tools.tools_func import ToolsList
 
 
 @st.cache_resource
@@ -47,7 +46,3 @@ class BedrockClient:
             converse_args["system"] = system_prompts
 
         return converse_args
-
-    def run_tool(self, tool_name, tool_args):
-        print(f"Running ({tool_name}) tool...")
-        return getattr(ToolsList(), tool_name)(**tool_args)

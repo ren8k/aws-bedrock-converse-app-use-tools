@@ -1,12 +1,14 @@
+import copy
+import json
+
 import boto3
 import streamlit as st
 from tools.tools_func import ToolsList
-from utils.utils import load_json
 
 
 class CFG:
     model_id = "anthropic.claude-3-haiku-20240307-v1:0"
-    system_prompt = "あなたは気象予報士です．You have access to tools, but only use them when necessary. If a tool is not required, respond as normal."
+    system_prompt = "You are AI assistant. You have access to tools, but only use them when necessary. If a tool is not required, respond as normal."
     temperature = 0.5
     top_k = 200
     tool_config = {
@@ -19,7 +21,8 @@ class CFG:
             # }
         },
     }
-    tool_config["tools"] = load_json("./tools/tools_definition.json")
+    with open("./tools/tools_definition.json", "r") as file:
+        tool_config["tools"] = json.load(file)
 
 
 @st.cache_resource
@@ -30,7 +33,6 @@ def get_bedrock_client():
 def generate_response(messages):
     bedrock_client = get_bedrock_client()
     system_prompts = [{"text": CFG.system_prompt}]
-
     inference_config = {"temperature": CFG.temperature}
     additional_model_fields = {"top_k": CFG.top_k}
 
@@ -42,7 +44,6 @@ def generate_response(messages):
         additionalModelRequestFields=additional_model_fields,
         toolConfig=CFG.tool_config,
     )
-
     return response["output"]["message"], response["stopReason"]
 
 
@@ -65,57 +66,63 @@ def get_tool_use_args(response_msg):
     return next((c["toolUse"] for c in response_msg["content"] if "toolUse" in c), None)
 
 
-def handle_tool_use(function_calling, response_msg):
-    display_msg_content(response_msg)
-    st.session_state.messages.append(response_msg)
-    # Get the tool name and arguments:
-    tool_name = function_calling["name"]
-    tool_args = function_calling["input"] or {}
-    # Run the tool:
-    print(f"Running ({tool_name}) tool...")
-    tool_response = getattr(ToolsList(), tool_name)(**tool_args)
-    # Add the tool result to the prompt:
-    st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": [
-                {
-                    "toolResult": {
-                        "toolUseId": function_calling["toolUseId"],
-                        "content": [{"text": tool_response}],
-                    }
+def create_tool_result_msg(tool_use_id, tool_response):
+    return {
+        "role": "user",
+        "content": [
+            {
+                "toolResult": {
+                    "toolUseId": tool_use_id,
+                    "content": [{"text": tool_response}],
                 }
-            ],
-        }
-    )
-    response_msg, _ = generate_response(st.session_state.messages)
-    return response_msg
+            }
+        ],
+    }
+
+
+def run_tool(tool_name, tool_args):
+    print(f"Running ({tool_name}) tool...")
+    return getattr(ToolsList(), tool_name)(**tool_args)
+
+
+def execute_tool(tool_use_args):
+    tool_name = tool_use_args["name"]
+    tool_args = tool_use_args["input"] or {}
+    tool_use_id = tool_use_args["toolUseId"]
+    print(f"Running ({tool_name}) tool...")
+    tool_response = run_tool(tool_name, tool_args)
+    tool_result_msg = create_tool_result_msg(tool_use_id, tool_response)
+    return tool_result_msg
+
+
+def update_chat_history(message):
+    st.session_state.messages.append(message)
 
 
 def main():
-    st.title("Bedrock Conversation API Chatbot")
-
     if "messages" not in st.session_state:
         st.session_state.messages = []
+
+    st.title("Bedrock Conversation API Chatbot")
 
     display_history(st.session_state.messages)
 
     if prompt := st.chat_input("What's up?"):
         input_msg = {"role": "user", "content": [{"text": prompt}]}
         display_msg_content(input_msg)
-        st.session_state.messages.append(input_msg)
+        update_chat_history(input_msg)
 
-        response_msg, stop_reason = generate_response(st.session_state.messages)
+        output_msg, stop_reason = generate_response(st.session_state.messages)
         if stop_reason == "tool_use":
-            tool_use_args = get_tool_use_args(response_msg)
-            response_msg = handle_tool_use(tool_use_args, response_msg)
-        display_msg_content(response_msg)
-        st.session_state.messages.append(response_msg)
+            display_msg_content(output_msg)
+            update_chat_history(output_msg)
+            tool_use_args = get_tool_use_args(output_msg)
+            tool_result_msg = execute_tool(tool_use_args)
+            update_chat_history(tool_result_msg)
+            output_msg, _ = generate_response(st.session_state.messages)
 
-    # from pprint import pprint
-
-    # print("#" * 50)
-    # pprint(st.session_state.messages)
+        display_msg_content(output_msg)
+        update_chat_history(output_msg)
 
 
 if __name__ == "__main__":

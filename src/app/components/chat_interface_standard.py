@@ -1,7 +1,9 @@
 import copy
 import json
+from pprint import pprint
 
 import streamlit as st
+from tools.tools_func import ToolsList
 
 
 class ChatInterfaceStandard:
@@ -37,14 +39,11 @@ class ChatInterfaceStandard:
                 )
             self.display_msg_content(output_msg)
             self.update_chat_history(output_msg)
+            self.print_history(st.session_state.messages)
 
-            self.print_history()
-
-    def print_history(self):
-        from pprint import pprint
-
+    def print_history(self, history):
         print("#" * 50)
-        pprint(st.session_state.messages)
+        pprint(history)
 
     def update_chat_history(self, message):
         st.session_state.messages.append(copy.deepcopy(message))
@@ -80,11 +79,14 @@ class ChatInterfaceStandard:
             ],
         }
 
+    def run_tool(self, tool_name, tool_args):
+        return getattr(ToolsList(), tool_name)(**tool_args)
+
     def execute_tool(self, tool_use_args):
         tool_name = tool_use_args["name"]
         tool_args = tool_use_args["input"] or {}
         tool_use_id = tool_use_args["toolUseId"]
         print(f"Running ({tool_name}) tool...")
-        tool_response = self.bedrock.run_tool(tool_name, tool_args)
+        tool_response = self.run_tool(tool_name, tool_args)
         tool_result_msg = self.create_tool_result_msg(tool_use_id, tool_response)
         return tool_result_msg
