@@ -34,13 +34,9 @@ class ChatInterfaceStreaming:
 
             # check tool use
             if self.tool_use_mode:
-                output_msg = {
-                    "role": "assistant",
-                    "content": [
-                        {"text": generated_text},
-                        {"toolUse": self.tool_use_args},
-                    ],
-                }
+                output_msg = self.create_tool_request_msg(
+                    generated_text, self.tool_use_args
+                )
                 self.update_chat_history(output_msg)
 
                 tool_result_msg = self.execute_tool()
@@ -76,7 +72,7 @@ class ChatInterfaceStreaming:
                 st.markdown(message["content"][0]["text"])
 
     def parse_stream(self, response_stream):
-        # 本関数は，ストリーミングのレスポンスから，LLMの出力およびツールの入力を取得するための関数です．
+        #  extract the LLM's output and tool's input from the streaming response.
         tool_use_input = ""
         for event in response_stream:
             if "contentBlockDelta" in event:
@@ -109,6 +105,16 @@ class ChatInterfaceStreaming:
                 if not generated_text:
                     generated_text = st.write_stream(self.tinking_stream())
         return generated_text
+
+    def create_tool_request_msg(self, generated_text, tool_use_args):
+        # tool_use_args includes name, input, and toolUseId
+        return {
+            "role": "assistant",
+            "content": [
+                {"text": generated_text},
+                {"toolUse": tool_use_args},
+            ],
+        }
 
     def create_tool_result_msg(self, tool_use_id, tool_response):
         return {
