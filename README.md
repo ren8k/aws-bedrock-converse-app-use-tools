@@ -1,4 +1,7 @@
+https://x.com/minorun365/status/1797947177102409991
+
 - Haiku は Tools を利用してしまう
+- Opus も逆に Tools を使ってしまう．（CoT が自動で走って，どの Tools が最適か考えてしまう）
 - Sonnet が良いかも
 - Opus は CoT してくる．（<thinking>タグを必ず使ってくる）
 
