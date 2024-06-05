@@ -8,7 +8,7 @@ from tools.tools_func import ToolsList
 
 class CFG:
     model_id = "anthropic.claude-3-haiku-20240307-v1:0"
-    system_prompt = "You are AI assistant. You have access to tools, but only use them when necessary. If a tool is not required, respond as normal."
+    system_prompt = "You are an AI assistant. You have access to tools, but only use them when necessary. If a tool is not required, respond as normal."
     temperature = 0.5
     top_k = 200
     tool_config = {
