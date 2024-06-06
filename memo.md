@@ -53,6 +53,13 @@ TypeError: get_weather() missing 1 required positional argument: 'city'
 botocore.exceptions.EventStreamError: An error occurred (throttlingException) when calling the ConverseStream operation: Too many requests, please wait before trying again. You have sent too many requests.  Wait before trying again.
 ```
 
+- AI 21 lab のモデルの場合，会話履歴があるとエラーになる
+
+```
+botocore.errorfactory.ValidationException: An error occurred (ValidationException) when calling the Converse operation: This model doesn't support conversation history. Try again with input that only includes one user message.
+
+```
+
 ## AWS Documentation
 
 - [Use the Converse API](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html)
