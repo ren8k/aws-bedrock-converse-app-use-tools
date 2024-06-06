@@ -2,11 +2,21 @@ import json
 
 import boto3
 import streamlit as st
+from botocore.config import Config
 
 
 @st.cache_resource
 def get_bedrock_client(region):
-    return boto3.client(service_name="bedrock-runtime", region_name=region)
+    retry_config = Config(
+        region_name=region,
+        retries={
+            "max_attempts": 10,
+            "mode": "standard",
+        },
+    )
+    return boto3.client(
+        service_name="bedrock-runtime", config=retry_config, region_name=region
+    )
 
 
 class BedrockClient:
