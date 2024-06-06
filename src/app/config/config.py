@@ -44,8 +44,12 @@ class Config:
         "anthropic.claude-3-sonnet-20240229-v1:0",
         "anthropic.claude-3-opus-20240229-v1:0",
         "cohere.command-r-plus-v1:0",
+        "cohere.command-r-v1:0",
         "mistral.mistral-large-2402-v1:0",
+        "mistral.mistral-small-2402-v1:0",
         "meta.llama3-70b-instruct-v1:0",
+        "ai21.j2-ultra-v1",
+        "ai21.j2-mid-v1",
         "amazon.titan-text-premier-v1:0",
         "amazon.titan-text-lite-v1",
     ]
