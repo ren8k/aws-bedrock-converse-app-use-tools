@@ -13,6 +13,8 @@
 - [advanced-rag-app](https://github.com/aws-samples/aws-ml-jp/blob/main/tasks/generative-ai/advanced-rag/app/app.py)
 - [Advanced RAG on AWS 体験ワークショップ](https://catalog.us-east-1.prod.workshops.aws/workshops/9d2259fb-df5f-4f44-b1d3-9a8e0f0f7e46/ja-JP/01-advanced-rag-app/column)
 - [aws-samples/streamlit-examples-for-bedrock](https://github.com/aws-samples/streamlit-examples-for-bedrock/blob/main/1-chat.py)
+- [Breadcrumbsaws-ai-ml-workshop-kr/genai/aws-gen-ai-kr/12_bedrock_claude3
+  /bedrock_claude3_caculator_tool.ipynb](https://github.com/aws-samples/aws-ai-ml-workshop-kr/blob/6e4603a9c440b5c9a280631bf11a7e0fbb7c6664/genai/aws-gen-ai-kr/12_bedrock_claude3/bedrock_claude3_caculator_tool.ipynb#L133)
 
 ## Qiita
 
