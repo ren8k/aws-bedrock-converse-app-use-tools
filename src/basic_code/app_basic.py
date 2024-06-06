@@ -81,7 +81,6 @@ def create_tool_result_msg(tool_use_id, tool_response):
 
 
 def run_tool(tool_name, tool_args):
-    print(f"Running ({tool_name}) tool...")
     return getattr(ToolsList(), tool_name)(**tool_args)
 
 
