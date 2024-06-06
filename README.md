@@ -3,27 +3,21 @@
 本リポジトリでは，Amazon Bedrock の Comverse API を利用したチャットアプリを公開している．
 本チャットアプリは，以下の機能を持つ．
 
-## TL;DR<!-- omit in toc -->
-
 ## 目次<!-- omit in toc -->
 
 - [目的](#目的)
 - [オリジナリティ](#オリジナリティ)
-- [Converse API とは](#converse-api-とは)
-- [function calling とは](#function-calling-とは)
 - [前提](#前提)
 - [手順](#手順)
 - [アプリの機能](#アプリの機能)
-  - [リージョン・モデルの切り替え機能](#リージョンモデルの切り替え機能)
-  - [推論パラメータの設定機能](#推論パラメータの設定機能)
-  - [オプション機能](#オプション機能)
-    - [ストリーミング機能の切り替え](#ストリーミング機能の切り替え)
-  - [Tools について](#tools-について)
-- [コードの説明](#コードの説明)
-  - [ディレクトリ構成](#ディレクトリ構成)
-  - [コードの解説（streaming）](#コードの解説streaming)
-  - [コードの解説（batch）](#コードの解説batch)
-  - [注意点](#注意点)
+  - [1. リージョン・モデルの切り替え機能](#1-リージョンモデルの切り替え機能)
+  - [2. 推論パラメータの設定機能](#2-推論パラメータの設定機能)
+  - [3. オプション機能](#3-オプション機能)
+    - [3-1. ストリーミング機能の利用切り替え](#3-1-ストリーミング機能の利用切り替え)
+    - [3-2. Use tools の利用切り替え](#3-2-use-tools-の利用切り替え)
+    - [3-3. システムプロンプトの利用切り替え](#3-3-システムプロンプトの利用切り替え)
+- [ディレクトリ構成およびコードの説明](#ディレクトリ構成およびコードの説明)
+- [開発の過程で気づいた点](#開発の過程で気づいた点)
 - [References](#references)
 
 ## 目的
@@ -32,10 +26,7 @@
 
 - ConverseStreamAPI と Use tools を組合せた実装
 - Streamlit の ChatUI を利用したチャットアプリ
-
-## Converse API とは
-
-## function calling とは
+- 参考のため，機能を削ぎ落としたシンプルな実装例も公開
 
 ## 前提
 
@@ -45,11 +36,11 @@
 
 ## アプリの機能
 
-本アプリの機能として，① リージョン・モデルの切り替え機能，② 推論パラメータの設定機能，③ オプション機能（ストリーミング機能・Use Tools・システムプロンプトの利用選択）がある．以降，各機能について説明する．
+本アプリの機能として，① リージョン・モデルの切り替え機能，② 推論パラメータの設定機能，③ オプション機能（ストリーミング機能・Use tools・システムプロンプトの利用選択）がある．以降，各機能について説明する．
 
 <img src="./assets/chat-ui-function.png" width="800">
 
-### リージョン・モデルの切り替え機能
+### 1. リージョン・モデルの切り替え機能
 
 リージョン（`us-west-2` or `us-east-1`）および，Converse API で利用可能なモデルを切り替えることができる．本実装で利用可能なモデルは以下の通りである．
 
@@ -66,7 +57,7 @@
 - `amazon.titan-text-premier-v1:0`
 - `amazon.titan-text-lite-v1`
 
-### 推論パラメータの設定機能
+### 2. 推論パラメータの設定機能
 
 Converse API では，引数`inference_config`に対し，以下の推論パラメーターを指定することが可能である．本実装では，以下のパラメーターに加え，System Prompt も設定できるようにしている．
 
@@ -75,32 +66,151 @@ Converse API では，引数`inference_config`に対し，以下の推論パラ�
 - temperature: 温度パラメーター
 - topP: 予測トークンの予測確率の累積値
 
-### オプション機能
+### 3. オプション機能
 
-ストリーミング機能の利用有無，Use Tools の利用有無，システムプロンプトの利用有無を設定可能である．モデルによっては，ストリーミング機能や Tools，システムプロンプトを利用できない[^9]ため，その場合は OFF にして利用することを想定している．以下に，Converse API で利用可能なモデルと，サポートされている機能を整理した表を示す．（執筆時点）
+ストリーミング機能の利用，Use tools の利用，システムプロンプトの利用を設定可能である．モデルによっては，ストリーミング機能や Tools，システムプロンプトを利用できない[^9-1]ため，その場合は OFF にして利用することを想定している．以下に，Converse API で利用可能なモデルと，サポートされている機能を示す．なお，以下の表は，執筆時点（2024/06/06）の AWS 公式ドキュメント[^9-1]から引用したものである．
 
 <img src="./assets/supported_model_table.png" width="800" title="キャプションテキスト">
 
-以下に各オプション機能について説明する．
+以降，各オプション機能について説明する．
 
-#### ストリーミング機能の切り替え
+#### 3-1. ストリーミング機能の利用切り替え
 
-トグルを ON にすると，`ConverseStream API`が利用され，OFF にすると，`Converse API`が利用される．
+トグルを ON にすると，`ConverseStream API`を利用でき，OFF にすると，`Converse API`を利用できる．なお，本機能は会話の途中でも自由に切り替えることが可能である．（会話の履歴は引き継がれる．）
 
-### Tools について
+#### 3-2. Use tools の利用切り替え
 
-## コードの説明
+トグルを ON にすると，`Use tools`を利用できる．なお，tools の定義は[`tools_definition.json`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_definition.json)に，tools の実装は[`tools_func.py`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_func.py)に定義してある．
 
-### ディレクトリ構成
+本実装で利用可能なツールは以下の通りである．（簡単のため，ツール内の実装は非常にシンプルにしている．）
 
-### コードの解説（streaming）
+- 天気予報取得ツール: 指定された`都道府県`と`市区町村`の天気予報を返す
+- Web 検索ツール: 指定された`検索語`で Web 検索を行い、上位 3 件の検索結果のテキストを返す
 
-### コードの解説（batch）
+参考のため，[`tools_definition.json`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_definition.json)と[`tools_func.py`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_func.py)の実装を以下に示す．（tools の実装については，AWS 公式リポジトリの実装例を参考にさせていただきました．）[^9-2]
 
-### 注意点
+<details>
+<summary>tools関連の実装</summary>
+<br/>
+
+**tools_definition.json**
+
+```json
+[
+  {
+    "toolSpec": {
+      "name": "get_weather",
+      "description": "Get weather of a location.",
+      "inputSchema": {
+        "json": {
+          "type": "object",
+          "properties": {
+            "prefecture": {
+              "type": "string",
+              "description": "prefecture of the location"
+            },
+            "city": {
+              "type": "string",
+              "description": "city of the location"
+            }
+          },
+          "required": ["prefecture", "city"]
+        }
+      }
+    }
+  },
+
+  {
+    "toolSpec": {
+      "name": "web_search",
+      "description": "Search a term in the public Internet. Useful for getting up to date information.",
+      "inputSchema": {
+        "json": {
+          "type": "object",
+          "properties": {
+            "search_term": {
+              "type": "string",
+              "description": "Term to search in the Internet"
+            }
+          },
+          "required": ["search_term"]
+        }
+      }
+    }
+  }
+]
+```
+
+<br>
+
+**tools_func.py**
+
+```python
+import requests
+from bs4 import BeautifulSoup
+from googlesearch import search
+
+
+class ToolsList:
+    # Define our get_weather tool function...
+    def get_weather(self, prefecture, city):
+        result = f"Weather in {prefecture}, {city} is 70F and clear skies."
+        print(f"Tool result: {result}")
+        return result
+
+    # Define our web_search tool function...
+    def web_search(self, search_term):
+        results = []
+        response_list = []
+        results.extend([r for r in search(search_term, 3, "en")])
+        for j in results:
+            response = requests.get(j)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, "html.parser")
+                response_list.append(soup.get_text().strip())
+        response_text = ",".join(str(i) for i in response_list)
+        # print(f"Search results: {response_text}")
+        return response_text
+
+```
+
+</details>
+<br/>
+
+#### 3-3. システムプロンプトの利用切り替え
+
+トグルを ON にすると，`Converse API`および`ConverseStream API`の 引数`system`にシステムプロンプトを指定することができる．
+
+## ディレクトリ構成およびコードの説明
+
+本アプリケーションの実装は，`src/app`ディレクトリ直下に配置されている．以下にディレクトリ構成を示す．
+
+```
+.
+├── app.py                            : Streamlit アプリケーションのエントリーポイント
+├── components
+│   ├── __init__.py
+│   ├── chat_interface_standard.py    : Converse API を利用した chat interface
+│   ├── chat_interface_streaming.py   : ConverseStream API を利用した chat interface
+│   └── sidebar.py                    : UI のサイドバー
+├── config
+│   └── config.py                     : モデルの設定情報 (推論パラメーター，toolsの設定)
+├── llm
+│   ├── __init__.py
+│   └── bedrock_client.py             : Bedrock API のクライアント
+├── run_app.sh                        : Streamlit アプリケーションの起動スクリプト
+├── tools
+│   ├── __init__.py
+│   ├── tools_definition.json         : tools の定義
+│   └── tools_func.py                 : tools の実装 (天気予報取得，Web検索)
+└── utils
+    ├── __init__.py
+    └── utils.py                      : ユーティリティ関数
+```
+
+## 開発の過程で気づいた点
 
 - モデルの引数の対応について
-- 気づいたこととかも共有したい
 - 必ずしも function calling が成功するとは限らない
   - command r とかだと，tool 実行に必要な引数をうまく生成できず，ツールの実行に失敗することもある
 - 会話履歴に tools の使用履歴が残っている場合，tools 無しの設定で会話できない
@@ -110,4 +220,5 @@ Converse API では，引数`inference_config`に対し，以下の推論パラ�
 
 ## References
 
-[^9]: [Use the Converse API/Supported models and model features](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html#conversation-inference-supported-models-features)
+[^9-1]: [Use the Converse API/Supported models and model features](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html#conversation-inference-supported-models-features)
+[^9-2]: [Function-Calling（Tool Use） with Converse API in Amazon Bedrock](https://github.com/aws-samples/amazon-bedrock-samples/blob/b64902625ea8ade362c0f7d1978428cecdcf47ed/function-calling/Function%20calling%20tool%20use%20with%20Converse%20API.ipynb)
