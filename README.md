@@ -17,6 +17,7 @@
   - [リージョン・モデルの切り替え機能](#リージョンモデルの切り替え機能)
   - [推論パラメータの設定機能](#推論パラメータの設定機能)
   - [オプション機能](#オプション機能)
+    - [ストリーミング機能の切り替え](#ストリーミング機能の切り替え)
   - [Tools について](#tools-について)
 - [コードの説明](#コードの説明)
   - [ディレクトリ構成](#ディレクトリ構成)
@@ -29,7 +30,8 @@
 
 ## オリジナリティ
 
-- ConverseStreamAPI と Use tools を組み合わせたチャットアプリ
+- ConverseStreamAPI と Use tools を組合せた実装
+- Streamlit の ChatUI を利用したチャットアプリ
 
 ## Converse API とは
 
@@ -43,7 +45,7 @@
 
 ## アプリの機能
 
-本アプリの機能として，① リージョン・モデルの切り替え機能，② 推論パラメータの設定機能，③ オプション機能（ストリーミング機能・Use Tools・システムプロンプトの適用切り替え）がある．以降，各機能について説明する．
+本アプリの機能として，① リージョン・モデルの切り替え機能，② 推論パラメータの設定機能，③ オプション機能（ストリーミング機能・Use Tools・システムプロンプトの利用選択）がある．以降，各機能について説明する．
 
 <img src="./assets/chat-ui-function.png" width="800">
 
@@ -51,22 +53,39 @@
 
 リージョン（`us-west-2` or `us-east-1`）および，Converse API で利用可能なモデルを切り替えることができる．本実装で利用可能なモデルは以下の通りである．
 
-- "anthropic.claude-3-haiku-20240307-v1:0",
-  "anthropic.claude-3-sonnet-20240229-v1:0",
-  "anthropic.claude-3-opus-20240229-v1:0",
-  "cohere.command-r-plus-v1:0",
-  "cohere.command-r-v1:0",
-  "mistral.mistral-large-2402-v1:0",
-  "mistral.mistral-small-2402-v1:0",
-  "meta.llama3-70b-instruct-v1:0",
-  "ai21.j2-ultra-v1",
-  "ai21.j2-mid-v1",
-  "amazon.titan-text-premier-v1:0",
-  "amazon.titan-text-lite-v1",
+- `anthropic.claude-3-haiku-20240307-v1:0`
+- `anthropic.claude-3-sonnet-20240229-v1:0`
+- `anthropic.claude-3-opus-20240229-v1:0`
+- `cohere.command-r-plus-v1:0`
+- `cohere.command-r-v1:0`
+- `mistral.mistral-large-2402-v1:0`
+- `mistral.mistral-small-2402-v1:0`
+- `meta.llama3-70b-instruct-v1:0`
+- `ai21.j2-ultra-v1`
+- `ai21.j2-mid-v1`
+- `amazon.titan-text-premier-v1:0`
+- `amazon.titan-text-lite-v1`
 
 ### 推論パラメータの設定機能
 
+Converse API では，引数`inference_config`に対し，以下の推論パラメーターを指定することが可能である．本実装では，以下のパラメーターに加え，System Prompt も設定できるようにしている．
+
+- maxTokens: 生成トークンの最大数
+- stopSequences: 停止シーケンスのリスト
+- temperature: 温度パラメーター
+- topP: 予測トークンの予測確率の累積値
+
 ### オプション機能
+
+ストリーミング機能の利用有無，Use Tools の利用有無，システムプロンプトの利用有無を設定可能である．モデルによっては，ストリーミング機能や Tools，システムプロンプトを利用できない[^9]ため，その場合は OFF にして利用することを想定している．以下に，Converse API で利用可能なモデルと，サポートされている機能を整理した表を示す．（執筆時点）
+
+<img src="./assets/supported_model_table.png" width="800" title="キャプションテキスト">
+
+以下に各オプション機能について説明する．
+
+#### ストリーミング機能の切り替え
+
+トグルを ON にすると，`ConverseStream API`が利用され，OFF にすると，`Converse API`が利用される．
 
 ### Tools について
 
@@ -90,3 +109,5 @@
 - Titan の stop ワードについて笑
 
 ## References
+
+[^9]: [Use the Converse API/Supported models and model features](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html#conversation-inference-supported-models-features)
