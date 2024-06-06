@@ -18,14 +18,12 @@
     - [3-3. システムプロンプトの利用切り替え](#3-3-システムプロンプトの利用切り替え)
 - [ディレクトリ構成およびコードの説明](#ディレクトリ構成およびコードの説明)
 - [開発の過程で気づいた点](#開発の過程で気づいた点)
-  - [Use tools について](#use-tools-について)
-    - [モデルが不必要に tools を利用してしまう課題](#モデルが不必要に-tools-を利用してしまう課題)
-    - [Use tools で Claude3 Opus を利用したの場合のレスポンスについて](#use-tools-で-claude3-opus-を利用したの場合のレスポンスについて)
-    - [ツール実行のための引数生成が必ずしも成功するとは限らない](#ツール実行のための引数生成が必ずしも成功するとは限らない)
-    - [会話履歴にツールの利用履歴がある場合，引数 toolConfig 無しで会話できない](#会話履歴にツールの利用履歴がある場合引数-toolconfig-無しで会話できない)
-  - [各モデルにおける Converse API の引数について](#各モデルにおける-converse-api-の引数について)
-    - [Amazon Titan の場合](#amazon-titan-の場合)
-    - [AI21 Lab の場合](#ai21-lab-の場合)
+  - [モデルが不必要に tools を利用してしまう課題](#モデルが不必要に-tools-を利用してしまう課題)
+  - [Use tools で Claude3 Opus を利用したの場合のレスポンスについて](#use-tools-で-claude3-opus-を利用したの場合のレスポンスについて)
+  - [ツール実行のための引数生成が必ずしも成功するとは限らない](#ツール実行のための引数生成が必ずしも成功するとは限らない)
+  - [会話履歴にツールの利用履歴がある場合，引数 toolConfig 無しで会話できない](#会話履歴にツールの利用履歴がある場合引数-toolconfig-無しで会話できない)
+  - [Amazon Titan で Converse API を利用する際の引数`stop sequence`について](#amazon-titan-で-converse-api-を利用する際の引数stop-sequenceについて)
+  - [AI21 Lab で Converse API を利用する際の引数`messages`について](#ai21-lab-で-converse-api-を利用する際の引数messagesについて)
 - [References](#references)
 
 ## 目的
@@ -225,9 +223,7 @@ class ToolsList:
 
 以下に，Use tools および Converse API の利用時に気をつけておくべき点をまとめる．
 
-### Use tools について
-
-#### モデルが不必要に tools を利用してしまう課題
+### モデルが不必要に tools を利用してしまう課題
 
 Use tools の設定を行った上で Converse API を利用すると，モデルが不必要に tools を利用してしまうことがある．例えば，モデルの知識で十分回答できる質問に対しても，Web 検索ツールを利用して回答してしまう．個人的な印象としては，Claude3 Haiku や Opus は tools を利用することが非常に多く，プロンプトでの制御も難しい．一方，Claude3 Sonnet も tools を利用する傾向が強いが，プロンプトでの制御がある程度効きやすい．
 
@@ -258,19 +254,19 @@ Anthropic の公式ドキュメント[^6-1]やコード[^6-2]を参考に，下�
 
 レスポンスの速度や，tools の利用状況を考慮すると，Claude3 Sonnet は有力なモデルの選択肢であると考えられる．
 
-#### Use tools で Claude3 Opus を利用したの場合のレスポンスについて
+### Use tools で Claude3 Opus を利用したの場合のレスポンスについて
 
 Use tools の設定を行った上で，Claude3 Opus で Converse API を利用すると，レスポンスに必ず CoT の内容が含まれる．具体的には，Converse API で引数`toolConfig`を指定すると，以下のように，`<thinking>`タグ内でどの tools を利用すべきかを思考する．本現象は仕様なのかは不明であるが，もし仕様であれば，CoT の内容は出力しないように工夫すると良いかもしれない．
 
 <img src="./assets/opus_cot.png" width="600">
 
-#### ツール実行のための引数生成が必ずしも成功するとは限らない
+### ツール実行のための引数生成が必ずしも成功するとは限らない
 
 Use tools では，LLM がツールの引数を生成し，ユーザーがツールの実行を行うが，必ずしもツールの引数生成が成功するとは限らない．Claude3 を利用する場合はほぼ失敗はしないが，Command R+ などのモデルを利用する場合，ツールの引数生成に失敗（引数が不足するなど）することが度々ある．
 
 ツールの引数生成失敗に伴うツールの実行失敗を回避するためのリトライの仕組みを実装することが望ましい．（本実装では取り入れていないが，ツールの実行に失敗した場合，エラーの内容を含めて LLM に情報を送信し，それを踏まえて再度引数を生成させることは可能である．[^6-3]）
 
-#### 会話履歴にツールの利用履歴がある場合，引数 toolConfig 無しで会話できない
+### 会話履歴にツールの利用履歴がある場合，引数 toolConfig 無しで会話できない
 
 Converse API の引数`messages`に，ツールの利用履歴である`toolUse`や`toolResult`を含む場合，Converse API の引数`toolConfig`を指定する必要がある．例えば，ツールの利用後，会話の途中で引数`toolConfig`を指定せずに Converse API を利用すると，以下のエラーが出る．
 
@@ -280,9 +276,7 @@ botocore.errorfactory.ValidationException: An error occurred (ValidationExceptio
 
 本アプリでは，ツールの利用有無をいつでも切り替えることができるが，ツール有り-> ツール無しに切り替える場合，エラーが発生し得る点に注意されたい．
 
-### 各モデルにおける Converse API の引数について
-
-#### Amazon Titan の場合
+### Amazon Titan で Converse API を利用する際の引数`stop sequence`について
 
 Amazon Titan で Converse API を利用する場合，引数`stop sequence`の指定の仕方が他のモデルと異なる．具体的には，引数`stop sequence`には，正規表現パターン「^(|+|User:)$」にマッチするような文字列しか指定できない．例えば，Amazon Titan で 引数`stop sequence=["</stop>"]`を指定して Converse API を利用すると以下のエラーが出る．
 
@@ -292,7 +286,7 @@ ValidationException: An error occurred (ValidationException) when calling the Co
 
 本アプリでは，Amazon Titan を選択した場合，`stop sequence`のデフォルト値として`User:`を指定するようにしている．
 
-#### AI21 Lab の場合
+### AI21 Lab で Converse API を利用する際の引数`messages`について
 
 - AI21 Labs Jurassic-2 で Converse API を利用する場合，引数`messages`に会話履歴を含めることはできない．具体的には，引数`messages`に`assistant`の応答内容を含めると以下のエラーが出る．
 
@@ -307,15 +301,3 @@ botocore.errorfactory.ValidationException: An error occurred (ValidationExceptio
 [^6-1]: [Chain of thought tool use](https://docs.anthropic.com/en/docs/tool-use-examples#chain-of-thought-tool-use)
 [^6-2]: [anthropics/courses/ToolUse/02_your_first_simple_tool.ipynb](https://github.com/anthropics/courses/blob/master/ToolUse/02_your_first_simple_tool.ipynb)
 [^6-3]: [Use tools with an Amazon Bedrock model](https://docs.aws.amazon.com/bedrock/latest/userguide/tool-use.html)
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
