@@ -68,7 +68,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-- アプリの実行．
+- アプリの実行
 
 ```bash
 cd src/app
