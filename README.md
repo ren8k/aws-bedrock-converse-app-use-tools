@@ -2,7 +2,7 @@
 
 本リポジトリでは，Amazon Bedrock の Comverse API を利用したチャットアプリを公開している．
 
-<img src="./assets/demo.gif">
+<video src="https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/develop/assets/demo.mp4" autoplay>
 
 ## 目次<!-- omit in toc -->
 
