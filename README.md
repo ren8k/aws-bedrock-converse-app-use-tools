@@ -1,6 +1,6 @@
 # Bedrock（with Converse API + Tool use）を利用したチャットアプリ<!-- omit in toc -->
 
-本リポジトリでは，Amazon Bedrock の Converse API, Use tools, streamlit を利用したチャットアプリの python 実装を公開している．
+本リポジトリでは，Amazon Bedrock の Converse API (Converse[^1-1], ConverseStream[^1-2]) Use tools[^1-3], streamlit を利用したチャットアプリの python 実装を公開する．
 
 <img src="./assets/demo.gif">
 
@@ -295,6 +295,9 @@ Anthropic の公式ドキュメント[^6-1]やコード[^6-2]を参考に，下�
 
 レスポンスの速度や，ツールの利用状況を考慮すると，Claude3 Sonnet は有力なモデルの選択肢であると考えられる．
 
+> [!NOTE]
+> Claude3 Sonnet の場合，上記のようなシステムプロンプトでうまく制御できたが，Mistral AI Large の場合は，ツールの利用傾向が低くなるように観察された．モデルの特性を踏まえ，モデル毎に適切なシステムプロンプトを設定することが重要である．
+
 ### Use tools で Claude3 Opus を利用したの場合のレスポンスについて
 
 Use tools の設定を行った上で，Claude3 Opus で Converse API を利用すると，レスポンスに必ず CoT の内容が含まれる．具体的には，Converse API で引数`toolConfig`を指定すると，以下のように，`<thinking>`タグ内でどの tools を利用すべきかを思考する．本現象は仕様なのかは不明であるが，もし仕様であれば，CoT の内容は出力しないように工夫すると良いかもしれない．
@@ -339,6 +342,9 @@ botocore.errorfactory.ValidationException: An error occurred (ValidationExceptio
 
 ## References
 
+[^1-1]: [Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html)
+[^1-2]: [ConverseStream](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ConverseStream.html)
+[^1-3]: [Tool use (function calling)](https://docs.aws.amazon.com/bedrock/latest/userguide/tool-use.html)
 [^5-1]: [Use the Converse API/Supported models and model features](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html#conversation-inference-supported-models-features)
 [^5-2]: [Function-Calling（Tool Use） with Converse API in Amazon Bedrock](https://github.com/aws-samples/amazon-bedrock-samples/blob/b64902625ea8ade362c0f7d1978428cecdcf47ed/function-calling/Function%20calling%20tool%20use%20with%20Converse%20API.ipynb)
 [^6-1]: [Chain of thought tool use](https://docs.anthropic.com/en/docs/tool-use-examples#chain-of-thought-tool-use)
