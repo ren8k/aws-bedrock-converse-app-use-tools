@@ -1,6 +1,6 @@
 # Bedrock（with Converse API + Tool use）を利用したチャットアプリ<!-- omit in toc -->
 
-本リポジトリでは，Amazon Bedrock の Converse API (Converse[^1-1], ConverseStream[^1-2]) Use tools[^1-3], streamlit を利用したチャットアプリの python 実装を公開する．
+本リポジトリでは，Amazon Bedrock の Converse API (Converse[^1-1], ConverseStream[^1-2]), Use tools[^1-3], streamlit を利用したチャットアプリの python 実装を公開する．
 
 <img src="./assets/demo.gif">
 
