@@ -23,20 +23,23 @@ class ChatInterfaceStandard:
             self.display_msg_content(input_msg)
             self.update_chat_history(input_msg)
 
-            output_msg, stop_reason = self.bedrock.generate_response(
+            response = self.bedrock.generate_response(
                 st.session_state.messages, self.cfg
             )
+            output_msg = response["output"]["message"]
 
             # check tool use
-            if stop_reason == "tool_use":
+            if response["stopReason"] == "tool_use":
                 self.display_msg_content(output_msg)
                 self.update_chat_history(output_msg)
                 tool_use_args = self.get_tool_use_args(output_msg)
                 tool_result_msg = self.execute_tool(tool_use_args)
                 self.update_chat_history(tool_result_msg)
-                output_msg, _ = self.bedrock.generate_response(
+                response = self.bedrock.generate_response(
                     st.session_state.messages, self.cfg
                 )
+                output_msg = response["output"]["message"]
+
             self.display_msg_content(output_msg)
             self.update_chat_history(output_msg)
             self.print_history(st.session_state.messages)
