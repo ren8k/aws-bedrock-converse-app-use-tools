@@ -1,4 +1,6 @@
-## AWS Documentation
+# 参考になるリンク集
+
+## AWS Official Document
 
 - [Use the Converse API](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html)
 - [Use tools with an Amazon Bedrock model](https://docs.aws.amazon.com/bedrock/latest/userguide/tool-use.html)
@@ -16,19 +18,20 @@
 - [Breadcrumbsaws-ai-ml-workshop-kr/genai/aws-gen-ai-kr/12_bedrock_claude3
   /bedrock_claude3_caculator_tool.ipynb](https://github.com/aws-samples/aws-ai-ml-workshop-kr/blob/6e4603a9c440b5c9a280631bf11a7e0fbb7c6664/genai/aws-gen-ai-kr/12_bedrock_claude3/bedrock_claude3_caculator_tool.ipynb#L133)
 
-## Qiita
-
-- [Converse API の登場により Bedrock に新モデルが登場したらいち早く試せる画面が完成しました](https://qiita.com/moritalous/items/cde191320abcfffacaca)
-- [Amazon Bedrock に Use Tools（Function calling）が来た](https://qiita.com/moritalous/items/8b1a15a7dc583fa3a2e1?utm_campaign=post_article&utm_medium=twitter&utm_source=twitter_share)
-
-## streamlit UI
-
-- [Streamlit の ChatUI 機能を使った簡単な実装例](https://book.st-hakky.com/data-science/streamlit-chat-ui-example/)
-
 ## anthropics
 
 - [Tool use (function calling)](https://docs.anthropic.com/ja/docs/tool-use)
 - [course/ToolUse](https://github.com/anthropics/courses/tree/master/ToolUse)
+
+## Qiita
+
+- [Converse API の登場により Bedrock に新モデルが登場したらいち早く試せる画面が完成しました](https://qiita.com/moritalous/items/cde191320abcfffacaca)
+- [Amazon Bedrock に Use Tools（Function calling）が来た](https://qiita.com/moritalous/items/8b1a15a7dc583fa3a2e1?utm_campaign=post_article&utm_medium=twitter&utm_source=twitter_share)
+- [Bedrock の Converse API を少しだけ掘り下げる](https://qiita.com/cyberBOSE/items/6293ddd1897c172f55c7)
+
+## streamlit UI
+
+- [Streamlit の ChatUI 機能を使った簡単な実装例](https://book.st-hakky.com/data-science/streamlit-chat-ui-example/)
 
 ## Converse API
 
@@ -37,6 +40,8 @@
 > Amazon Bedrock のメリットのひとつは、統一された Amzaon Bedrock の API で様々な基盤モデルを呼び出せることです。今回、そのメリットを強化する Converse API が公開されました。基盤モデルには、推論時のパラメータをはじめモデル毎に固有の違いがあります。これまで Bedrock を介して基盤モデルを呼び出す場合、モデル毎のパラメータの違いは開発者が考慮し対応する必要がありました。Converse API はこの手間を省き、様々なモデルをシームレスに呼び出すことを可能にします。また、Converse API は複数回の会話のやりとりを行うマルチターン対話や、モデルのツール呼び出し(関数呼び出し)にも対応しています。
 
 ---
+
+## toolUse 利用時のレスポンスの一部
 
 ```json
 {
