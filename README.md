@@ -1,6 +1,6 @@
 # Bedrock（with Converse API + Tool use）を利用したチャットアプリ<!-- omit in toc -->
 
-本リポジトリでは，Amazon Bedrock の Comverse API を利用したチャットアプリを公開している．
+本リポジトリでは，Amazon Bedrock の Converse API を利用したチャットアプリを公開している．
 
 <img src="https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/develop/assets/demo.mp4" autoplay>
 
