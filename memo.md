@@ -1,65 +1,3 @@
-https://x.com/minorun365/status/1797947177102409991
-
-- Haiku は Tools を利用してしまう
-- Opus も逆に Tools を使ってしまう．（CoT が自動で走って，どの Tools が最適か考えてしまう）
-- Sonnet が良いかも
-- Opus は CoT してくる．（<thinking>タグを必ず使ってくる）
-
-- streaming は，Claude しか対応してない
-- model によっては，stop sequence の指定の仕方が異なるっぽい
-  - 折角 Converse API でモデル毎の推論パラメータを気にしなくて良いと謳っているが，，
-  - 例えば，Amazon Titan とかで実験すると以下のエラー．
-
-```
-ValidationException: An error occurred (ValidationException) when calling the Converse operation: The model returned the following errors: Malformed input request: string [</stop>] does not match pattern ^(\|+|User:)$, please reformat your input and try again.
-```
-
-- 会話履歴に Tools の利用履歴がある場合，次の会話で Tools を利用するときに，toolConfig が必要になる．
-  - 以下のエラーが出る．
-
-```
-botocore.errorfactory.ValidationException: An error occurred (ValidationException) when calling the Converse operation: The toolConfig field must be defined when using toolUse and toolResult content blocks.
-```
-
-- command-R の場合だと，Tools の引数をうまく生成できないことがある．
-  - Tools を利用する場合，現段階だと Claude が一番安定している（）沢山 API 叩いたが，一度も Tools 呼び出しで失敗しない
-
-```
-{'role': 'assistant', 'content': [{'text': 'I will use the get_weather tool to find the weather in Tokyo.'}, {'toolUse': {'toolUseId': 'tooluse_ZN2nirNzQlmNEUlnMw2w5A', 'name': 'get_weather', 'input': {'prefecture': {'text': 'Tokyo'}}}}]}
-Running (get_weather) tool...
-Running (get_weather) tool...
-2024-06-04 11:18:24.134 Uncaught app exception
-Traceback (most recent call last):
-  File "/home/renya/anaconda3/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 600, in _run_script
-    exec(code, module.__dict__)
-  File "/home/renya/Develop/aws/aws-bedrock-chat-app-function-calling/src/app/app.py", line 24, in <module>
-    main()
-  File "/home/renya/Develop/aws/aws-bedrock-chat-app-function-calling/src/app/app.py", line 20, in main
-    chat_interface.run()
-  File "/home/renya/Develop/aws/aws-bedrock-chat-app-function-calling/src/app/components/chat_interface_standard.py", line 34, in run
-    tool_result_msg = self.execute_tool(tool_use_args)
-  File "/home/renya/Develop/aws/aws-bedrock-chat-app-function-calling/src/app/components/chat_interface_standard.py", line 89, in execute_tool
-    tool_response = self.bedrock.run_tool(tool_name, tool_args)
-  File "/home/renya/Develop/aws/aws-bedrock-chat-app-function-calling/src/app/llm/bedrock_client.py", line 53, in run_tool
-    return getattr(ToolsList(), tool_name)(**tool_args)
-TypeError: get_weather() missing 1 required positional argument: 'city'
-
-```
-
-- Opus だと CoT の内容が勝手に出力される
-- Converse API を叩きまくると，以下のエラーが出る
-
-```
-botocore.exceptions.EventStreamError: An error occurred (throttlingException) when calling the ConverseStream operation: Too many requests, please wait before trying again. You have sent too many requests.  Wait before trying again.
-```
-
-- AI 21 lab のモデルの場合，会話履歴があるとエラーになる
-
-```
-botocore.errorfactory.ValidationException: An error occurred (ValidationException) when calling the Converse operation: This model doesn't support conversation history. Try again with input that only includes one user message.
-
-```
-
 ## AWS Documentation
 
 - [Use the Converse API](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html)
@@ -75,6 +13,8 @@ botocore.errorfactory.ValidationException: An error occurred (ValidationExceptio
 - [advanced-rag-app](https://github.com/aws-samples/aws-ml-jp/blob/main/tasks/generative-ai/advanced-rag/app/app.py)
 - [Advanced RAG on AWS 体験ワークショップ](https://catalog.us-east-1.prod.workshops.aws/workshops/9d2259fb-df5f-4f44-b1d3-9a8e0f0f7e46/ja-JP/01-advanced-rag-app/column)
 - [aws-samples/streamlit-examples-for-bedrock](https://github.com/aws-samples/streamlit-examples-for-bedrock/blob/main/1-chat.py)
+- [Breadcrumbsaws-ai-ml-workshop-kr/genai/aws-gen-ai-kr/12_bedrock_claude3
+  /bedrock_claude3_caculator_tool.ipynb](https://github.com/aws-samples/aws-ai-ml-workshop-kr/blob/6e4603a9c440b5c9a280631bf11a7e0fbb7c6664/genai/aws-gen-ai-kr/12_bedrock_claude3/bedrock_claude3_caculator_tool.ipynb#L133)
 
 ## Qiita
 
