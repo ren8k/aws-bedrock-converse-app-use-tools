@@ -29,10 +29,10 @@ class ChatInterfaceStreaming:
             self.display_msg_content(input_msg)
             self.update_chat_history(input_msg)
 
-            response_stream = self.bedrock.generate_streaming_response(
+            response = self.bedrock.generate_response(
                 st.session_state.messages, self.cfg
             )
-            generated_text: str = self.display_streaming_msg_content(response_stream)
+            generated_text: str = self.display_streaming_msg_content(response["stream"])
 
             # check tool use
             if self.tool_use_mode:
@@ -44,10 +44,10 @@ class ChatInterfaceStreaming:
                 tool_result_msg = self.execute_tool()
                 self.update_chat_history(tool_result_msg)
 
-                response_stream = self.bedrock.generate_streaming_response(
+                response = self.bedrock.generate_response(
                     st.session_state.messages, self.cfg
                 )
-                generated_text = self.display_streaming_msg_content(response_stream)
+                generated_text = self.display_streaming_msg_content(response["stream"])
                 self.tool_use_mode = False
 
             output_msg = {"role": "assistant", "content": [{"text": generated_text}]}

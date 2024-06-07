@@ -1,6 +1,6 @@
 # Bedrock（with Converse API + Tool use）を利用したチャットアプリ<!-- omit in toc -->
 
-本リポジトリでは，Amazon Bedrock の Converse API を利用したチャットアプリを公開している．
+本リポジトリでは，Amazon Bedrock の Converse API (Converse[^1-1], ConverseStream[^1-2]) Use tools[^1-3], streamlit を利用したチャットアプリの python 実装を公開する．
 
 <img src="./assets/demo.gif">
 
@@ -18,7 +18,7 @@
     - [3-2. Use tools の利用切り替え](#3-2-use-tools-の利用切り替え)
     - [3-3. システムプロンプトの利用切り替え](#3-3-システムプロンプトの利用切り替え)
 - [ディレクトリ構成およびコードの説明](#ディレクトリ構成およびコードの説明)
-- [開発の過程で気づいた点](#開発の過程で気づいた点)
+- [Converse API Deep Dive](#converse-api-deep-dive)
   - [モデルが不必要にツールを利用してしまう課題](#モデルが不必要にツールを利用してしまう課題)
   - [Use tools で Claude3 Opus を利用したの場合のレスポンスについて](#use-tools-で-claude3-opus-を利用したの場合のレスポンスについて)
   - [ツール実行のための引数生成が必ずしも成功するとは限らない](#ツール実行のための引数生成が必ずしも成功するとは限らない)
@@ -258,9 +258,9 @@ class ToolsList:
     └── utils.py                      : ユーティリティ関数
 ```
 
-## 開発の過程で気づいた点
+## Converse API Deep Dive
 
-以下に，Use tools および Converse API の利用時に気をつけておくべき点をまとめる．
+本章では，Converse API でツールを利用する際の注意点について解説する．特に，Claude 3 のモデル毎のツールの利用傾向やプロンプトによるツール利用の制御方法，Claude3 Opus のレスポンスに含まれる CoT の内容，ツール実行時の引数生成の失敗ケースなど，Use tools を利用する上で知っておくべき留意点を幅広く取り上げる．また，Converse API がサポートするモデルの一部の引数には制限がある点についても説明する．
 
 ### モデルが不必要にツールを利用してしまう課題
 
@@ -277,21 +277,26 @@ Use tools の設定を行った上で Converse API を利用すると，モデ�
 Anthropic の公式ドキュメント[^6-1]やコード[^6-2]を参考に，下記のようなシステムプロンプトを作成することで，Claude3 Sonnet ではツールの利用を抑制することができた．下記プロンプトの特徴としては，「必要な場合のみツールを利用する」ように指示している点である．
 
 ```
-あなたは日本人のAIアシスタントです．必ず日本語で回答する必要があります．
+あなたは日本人のAIアシスタントです。必ず日本語で回答する必要があります。
+以下の<rule>タグ内には厳守すべきルールが記載されています。以下のルールを絶対に守り、ツールを不必要に使用しないで下さい。
+<rule>
 あなたはツールにアクセスできますが、必要な場合にのみそれらを使用してください。
-
-自身の知識で回答できない場合のみ，関連するツールを使用してユーザーの要求に答えてください。
+自身の知識で回答できない場合のみ、関連するツールを使用してユーザーの要求に答えてください。
+</rule>
 
 まず、提供されたツールのうち、ユーザーの要求に答えるのに関連するツールはどれかを考えてください。次に、関連するツールの必須パラメータを1つずつ確認し、ユーザーが直接提供したか、値を推測するのに十分な情報を与えているかを判断します。
 
 パラメータを推測できるかどうかを決める際は、特定の値をサポートするかどうかを慎重に検討してください。ただし、必須パラメータの値の1つが欠落している場合は、関数を呼び出さず(欠落しているパラメータに値を入れても呼び出さない)、代わりにユーザーに欠落しているパラメータの提供を求めてください。提供されていないオプションのパラメータについては、追加情報を求めないでください。
 ```
 
-上記のシステムプロンプトを利用した場合の応答例を以下に示す．下記では，富士山については自身の知識で回答しており，Amazon Bedrock については知識が無いため，Web 検索ツールを利用している．
+上記のシステムプロンプトを利用した場合の応答例を以下に示す．下記では，富士山に関する質問は自身の知識で回答しており，Amazon Bedrock に関する質問には知識が無いため，Web 検索ツールを利用して回答している．
 
 <img src="./assets/sonnet_use_tools.png" width="600">
 
 レスポンスの速度や，ツールの利用状況を考慮すると，Claude3 Sonnet は有力なモデルの選択肢であると考えられる．
+
+> [!NOTE]
+> Claude3 Sonnet の場合，上記のようなシステムプロンプトでうまく制御できたが，Mistral AI Large の場合は，ツールの利用傾向が低くなるように観察された．モデルの特性を踏まえ，モデル毎に適切なシステムプロンプトを設計することが重要である．
 
 ### Use tools で Claude3 Opus を利用したの場合のレスポンスについて
 
@@ -317,7 +322,7 @@ botocore.errorfactory.ValidationException: An error occurred (ValidationExceptio
 
 ### Amazon Titan で Converse API を利用する際の引数`stop sequence`について
 
-Amazon Titan で Converse API を利用する場合，引数`stop sequence`の指定の仕方が他のモデルと異なる．具体的には，引数`stop sequence`には，正規表現パターン「^(|+|User:)$」にマッチするような文字列しか指定できない．例えば，Amazon Titan で 引数`stop sequence=["</stop>"]`を指定して Converse API を利用すると以下のエラーが出る．
+Amazon Titan で Converse API を利用する場合，引数`stop sequence`の指定の仕方が他のモデルと異なる．具体的には，引数`stop sequence`には，正規表現パターン「`^(|+|User:)$`」にマッチするような文字列しか指定できない．例えば，Amazon Titan で 引数`stop sequence=["</stop>"]`を指定して Converse API を利用すると以下のエラーが出る．
 
 ```
 ValidationException: An error occurred (ValidationException) when calling the Converse operation: The model returned the following errors: Malformed input request: string [</stop>] does not match pattern ^(\|+|User:)$, please reformat your input and try again.
@@ -327,14 +332,19 @@ ValidationException: An error occurred (ValidationException) when calling the Co
 
 ### AI21 Lab で Converse API を利用する際の引数`messages`について
 
-- AI21 Labs Jurassic-2 で Converse API を利用する場合，引数`messages`に会話履歴を含めることはできない．具体的には，引数`messages`に`assistant`の応答内容を含めると以下のエラーが出る．
+AI21 Labs Jurassic-2 で Converse API を利用する場合，引数`messages`に会話履歴を含めることはできない．例えば，引数`messages`に`assistant`の応答内容を含めると以下のエラーが出る．
 
 ```
 botocore.errorfactory.ValidationException: An error occurred (ValidationException) when calling the Converse operation: This model doesn't support conversation history. Try again with input that only includes one user message.
 ```
 
+本アプリで AI21 Labs Jurassic-2 を利用する場合，一度会話履歴のキャッシュをクリアしてから利用するように注意されたい．
+
 ## References
 
+[^1-1]: [Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html)
+[^1-2]: [ConverseStream](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ConverseStream.html)
+[^1-3]: [Tool use (function calling)](https://docs.aws.amazon.com/bedrock/latest/userguide/tool-use.html)
 [^5-1]: [Use the Converse API/Supported models and model features](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html#conversation-inference-supported-models-features)
 [^5-2]: [Function-Calling（Tool Use） with Converse API in Amazon Bedrock](https://github.com/aws-samples/amazon-bedrock-samples/blob/b64902625ea8ade362c0f7d1978428cecdcf47ed/function-calling/Function%20calling%20tool%20use%20with%20Converse%20API.ipynb)
 [^6-1]: [Chain of thought tool use](https://docs.anthropic.com/en/docs/tool-use-examples#chain-of-thought-tool-use)

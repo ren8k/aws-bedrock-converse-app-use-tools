@@ -23,15 +23,13 @@ class BedrockClient:
     def __init__(self, region):
         self.client = get_bedrock_client(region)
 
-    def generate_streaming_response(self, messages, cfg):
-        converse_api_args = self.make_converse_api_args(messages, cfg)
-        response = self.client.converse_stream(**converse_api_args)
-        return response["stream"]
-
     def generate_response(self, messages, cfg):
         converse_api_args = self.make_converse_api_args(messages, cfg)
-        response = self.client.converse(**converse_api_args)
-        return response["output"]["message"], response["stopReason"]
+        if cfg.use_streaming:
+            response = self.client.converse_stream(**converse_api_args)
+        else:
+            response = self.client.converse(**converse_api_args)
+        return response
 
     def make_converse_api_args(self, messages, cfg):
         system_prompts = [{"text": cfg.system_prompt}]
