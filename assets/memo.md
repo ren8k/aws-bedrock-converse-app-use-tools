@@ -27,6 +27,7 @@
 
 - [Converse API の登場により Bedrock に新モデルが登場したらいち早く試せる画面が完成しました](https://qiita.com/moritalous/items/cde191320abcfffacaca)
 - [Amazon Bedrock に Use Tools（Function calling）が来た](https://qiita.com/moritalous/items/8b1a15a7dc583fa3a2e1?utm_campaign=post_article&utm_medium=twitter&utm_source=twitter_share)
+- [Bedrock の Converse API を少しだけ掘り下げる](https://qiita.com/cyberBOSE/items/6293ddd1897c172f55c7)
 
 ## streamlit UI
 
