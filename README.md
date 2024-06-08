@@ -356,7 +356,25 @@ Claude3 でストリーミング処理で Tool use を利用する場合，Conve
 {'metadata': {'usage': {'inputTokens': 1219, 'outputTokens': 67, 'totalTokens': 1286}, 'metrics': {'latencyMs': 913}}}
 ```
 
-上記では，「はい、分かりました。」というテキストに加え，天気予報取得ツールを利用するための情報（`toolUse`）が含まれている．ConverseStreamAPI のレスポンスにテキストが含まれるかは会話内容に依存し不確定であるため，レスポンスの解析には注意が必要である．
+上記では，「はい、分かりました。」というテキストに加え，天気予報取得ツールを利用するための情報（`toolUse`）が含まれている．上記を整理すると，以下のような情報を出力している．（上記の`input`内の日本語は，Unicode エスケープシーケンスになっている．）
+
+```json
+{
+  "content": [
+    { "text": "はい、分かりました。" },
+    {
+      "toolUse": {
+        "toolUseId": "tooluse_zNriva5iRDaLQj2wy2qkDw",
+        "name": "get_weather",
+        "input": { "prefecture": "京都府", "city": "京都市" }
+      }
+    }
+  ],
+  "role": "assistant"
+}
+```
+
+ConverseStreamAPI のレスポンスにテキストが含まれるかは会話内容に依存し不確定であるため，レスポンスの解析には注意が必要である．
 
 ### モデル毎の Tool use 利用時における Converse API のレスポンスの差分
 
@@ -425,7 +443,3 @@ botocore.errorfactory.ValidationException: An error occurred (ValidationExceptio
 [^6-1]: [Chain of thought tool use](https://docs.anthropic.com/en/docs/tool-use-examples#chain-of-thought-tool-use)
 [^6-2]: [anthropics/courses/ToolUse/02_your_first_simple_tool.ipynb](https://github.com/anthropics/courses/blob/master/ToolUse/02_your_first_simple_tool.ipynb)
 [^6-3]: [Use tools with an Amazon Bedrock model](https://docs.aws.amazon.com/bedrock/latest/userguide/tool-use.html)
-
-```
-
-```
