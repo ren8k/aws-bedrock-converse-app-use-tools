@@ -23,6 +23,8 @@
   - [Tool use で Claude3 Opus を利用したの場合のレスポンスについて](#tool-use-で-claude3-opus-を利用したの場合のレスポンスについて)
   - [ツール実行のための引数生成が必ずしも成功するとは限らない](#ツール実行のための引数生成が必ずしも成功するとは限らない)
   - [会話履歴にツールの利用履歴がある場合，引数 toolConfig 無しで会話できない](#会話履歴にツールの利用履歴がある場合引数-toolconfig-無しで会話できない)
+  - [Tool use 利用時における ConverseStreamAPI のレスポンスの不確定性](#tool-use-利用時における-conversestreamapi-のレスポンスの不確定性)
+  - [モデル毎の Tool use 利用時における Converse API のレスポンスの差分](#モデル毎の-tool-use-利用時における-converse-api-のレスポンスの差分)
   - [Amazon Titan で Converse API を利用する際の引数`stop sequence`について](#amazon-titan-で-converse-api-を利用する際の引数stop-sequenceについて)
   - [AI21 Lab で Converse API を利用する際の引数`messages`について](#ai21-lab-で-converse-api-を利用する際の引数messagesについて)
 - [References](#references)
@@ -264,7 +266,7 @@ class ToolsList:
 
 ### モデルが不必要にツールを利用してしまう課題
 
-Tool use の設定を行った上で Converse API を利用すると，モデルが不必要にツールを利用してしまうことがある．例えば，モデルの知識で十分回答できる質問に対しても，Web 検索ツールを利用して回答してしまう．個人的な印象としては，Claude3 Haiku や Opus はツールを利用することが非常に多く，プロンプトでの制御も難しい．一方，Claude3 Sonnet もツールを利用する傾向が強いが，プロンプトでの制御がある程度効きやすい．
+Tool use 利用時，モデルが不必要にツールを利用してしまうことがある．例えば，モデルの知識で十分回答できる質問に対しても，Web 検索ツールを利用して回答してしまう．個人的な印象としては，Claude3 Haiku や Opus はツールを利用することが非常に多く，プロンプトでの制御も難しい．一方，Claude3 Sonnet もツールを利用する傾向が強いが，プロンプトでの制御がある程度効きやすい．
 
 以下に，各モデルにおけるツールの利用傾向を示す．（下記は個人環境での実験結果に基づく主観的な印象である点に注意されたい．）
 
@@ -320,6 +322,79 @@ botocore.errorfactory.ValidationException: An error occurred (ValidationExceptio
 
 本アプリでは，ツールの利用有無をいつでも切り替えることができるが，ツール有り-> ツール無しに切り替える場合，エラーが発生し得る点に注意されたい．
 
+### Tool use 利用時における ConverseStreamAPI のレスポンスの不確定性
+
+Claude3 でストリーミング処理で Tool use を利用する場合，ConverseStream API におけるレスポンス `response["stream"]`には，ツールリクエストのための情報（`toolUse`）に加え，生成されたテキストが含まれることがある．具体的には，ストリーミングのレスポンス`response["stream"]["contentBlockDelta"]["delta"]["text"]`にテキストが含まれることがある．
+
+以下に，Claude3 に「京都の天気を教えて」と指示した際の ConverseStream API のレスポンス`response["stream"]`の例を示す．
+
+```
+{'messageStart': {'role': 'assistant'}}
+{'contentBlockDelta': {'delta': {'text': 'は'}, 'contentBlockIndex': 0}}
+{'contentBlockDelta': {'delta': {'text': 'い'}, 'contentBlockIndex': 0}}
+{'contentBlockDelta': {'delta': {'text': '、'}, 'contentBlockIndex': 0}}
+{'contentBlockDelta': {'delta': {'text': '分'}, 'contentBlockIndex': 0}}
+{'contentBlockDelta': {'delta': {'text': 'か'}, 'contentBlockIndex': 0}}
+{'contentBlockDelta': {'delta': {'text': 'り'}, 'contentBlockIndex': 0}}
+{'contentBlockDelta': {'delta': {'text': 'ました'}, 'contentBlockIndex': 0}}
+{'contentBlockDelta': {'delta': {'text': '。'}, 'contentBlockIndex': 0}}
+{'contentBlockStop': {'contentBlockIndex': 0}}
+{'contentBlockStart': {'start': {'toolUse': {'toolUseId': 'tooluse_zNriva5iRDaLQj2wy2qkDw', 'name': 'get_weather'}}, 'contentBlockIndex': 1}}
+{'contentBlockDelta': {'delta': {'toolUse': {'input': ''}}, 'contentBlockIndex': 1}}
+{'contentBlockDelta': {'delta': {'toolUse': {'input': '{"pref'}}, 'contentBlockIndex': 1}}
+{'contentBlockDelta': {'delta': {'toolUse': {'input': 'ectu'}}, 'contentBlockIndex': 1}}
+{'contentBlockDelta': {'delta': {'toolUse': {'input': 're": "'}}, 'contentBlockIndex': 1}}
+{'contentBlockDelta': {'delta': {'toolUse': {'input': '\\u4eac\\u9'}}, 'contentBlockIndex': 1}}
+{'contentBlockDelta': {'delta': {'toolUse': {'input': '0fd\\u5e9c'}}, 'contentBlockIndex': 1}}
+{'contentBlockDelta': {'delta': {'toolUse': {'input': '"'}}, 'contentBlockIndex': 1}}
+{'contentBlockDelta': {'delta': {'toolUse': {'input': ', "cit'}}, 'contentBlockIndex': 1}}
+{'contentBlockDelta': {'delta': {'toolUse': {'input': 'y": "\\u4eac'}}, 'contentBlockIndex': 1}}
+{'contentBlockDelta': {'delta': {'toolUse': {'input': '\\u90fd'}}, 'contentBlockIndex': 1}}
+{'contentBlockDelta': {'delta': {'toolUse': {'input': '"}'}}, 'contentBlockIndex': 1}}
+{'contentBlockStop': {'contentBlockIndex': 1}}
+{'messageStop': {'stopReason': 'tool_use'}}
+{'metadata': {'usage': {'inputTokens': 1219, 'outputTokens': 67, 'totalTokens': 1286}, 'metrics': {'latencyMs': 913}}}
+```
+
+上記では，「はい、分かりました。」というテキストに加え，天気予報取得ツールを利用するための情報（`toolUse`）が含まれている．ConverseStreamAPI のレスポンスにテキストが含まれるかは会話内容に依存し不確定であるため，レスポンスの解析には注意が必要である．
+
+### モデル毎の Tool use 利用時における Converse API のレスポンスの差分
+
+Claude3 や Mistral AI Large で Tool use を利用する場合， Converse API におけるレスポンス `response["output"]["message"]`にはテキストは含まれない．以下に，Claude3 に「京都の天気を教えて」と指示した際の Converse API のレスポンス`response["output"]["message"]`を示す．
+
+```json
+{
+  "content": [
+    {
+      "toolUse": {
+        "input": { "city": "京都市", "prefecture": "京都府" },
+        "name": "get_weather",
+        "toolUseId": "tooluse_v2wRuKgLRPaQxJJBna0cyw"
+      }
+    }
+  ],
+  "role": "assistant"
+}
+```
+
+一方，Command R+ で Tool use を利用する場合，Converse API におけるレスポンス `response["output"]["message"]`には必ず生成されたテキストが含まれる．以下に，Command R+ に「京都の天気を教えて」と指示した際の Converse API のレスポンス`response["output"]["message"]`を示す．
+
+```json
+{
+  "content": [
+    { "text": "京都の天気を検索して、ユーザーに知らせます。" },
+    {
+      "toolUse": {
+        "input": { "city": "京都市", "prefecture": "京都府" },
+        "name": "get_weather",
+        "toolUseId": "tooluse_WMqogtHhTgOUcjGpRxTrKQ"
+      }
+    }
+  ],
+  "role": "assistant"
+}
+```
+
 ### Amazon Titan で Converse API を利用する際の引数`stop sequence`について
 
 Amazon Titan で Converse API を利用する場合，引数`stop sequence`の指定の仕方が他のモデルと異なる．具体的には，引数`stop sequence`には，正規表現パターン「`^(|+|User:)$`」にマッチするような文字列しか指定できない．例えば，Amazon Titan で 引数`stop sequence=["</stop>"]`を指定して Converse API を利用すると以下のエラーが出る．
@@ -350,3 +425,7 @@ botocore.errorfactory.ValidationException: An error occurred (ValidationExceptio
 [^6-1]: [Chain of thought tool use](https://docs.anthropic.com/en/docs/tool-use-examples#chain-of-thought-tool-use)
 [^6-2]: [anthropics/courses/ToolUse/02_your_first_simple_tool.ipynb](https://github.com/anthropics/courses/blob/master/ToolUse/02_your_first_simple_tool.ipynb)
 [^6-3]: [Use tools with an Amazon Bedrock model](https://docs.aws.amazon.com/bedrock/latest/userguide/tool-use.html)
+
+```
+
+```
