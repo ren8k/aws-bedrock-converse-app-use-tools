@@ -11,7 +11,7 @@ def sidebar(cfg):
         st.sidebar.header("Inference parameters")
         cfg.max_tokens = st.number_input("Max Tokens", value=cfg.max_tokens)
         if "amazon" in cfg.model_id:
-            cfg.stop_sequences = "User:"
+            cfg.stop_sequences = cfg.AMZN_TITAN_STOP_SEQUENCES
         cfg.stop_sequences = st.text_area(
             "Stop Sequences (Separate with commas)", cfg.stop_sequences
         )

@@ -55,6 +55,9 @@ class Config:
         "amazon.titan-text-premier-v1:0",
         "amazon.titan-text-lite-v1",
     ]
+    AMZN_TITAN_STOP_SEQUENCES = "User:"
+
+    # Sidebar toggles
     use_streaming = True
     use_tool_use = True
     use_system_prompt = True

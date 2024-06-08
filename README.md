@@ -1,6 +1,6 @@
 # Bedrock（with Converse API + Tool use）を利用したチャットアプリ<!-- omit in toc -->
 
-本リポジトリでは，Amazon Bedrock の Converse API (Converse[^1-1], ConverseStream[^1-2]), Use tools[^1-3], streamlit を利用したチャットアプリの python 実装を公開する．
+本リポジトリでは，Amazon Bedrock の Converse API (Converse [^1-1], ConverseStream[^1-2]) Tool use (function calling) [^1-3], Streamlit を利用したチャットアプリの python 実装を公開する．
 
 <img src="./assets/demo.gif">
 
@@ -15,12 +15,12 @@
   - [2. 推論パラメータの設定機能](#2-推論パラメータの設定機能)
   - [3. オプション機能](#3-オプション機能)
     - [3-1. ストリーミング機能の利用切り替え](#3-1-ストリーミング機能の利用切り替え)
-    - [3-2. Use tools の利用切り替え](#3-2-use-tools-の利用切り替え)
+    - [3-2. Tool use の利用切り替え](#3-2-tool-use-の利用切り替え)
     - [3-3. システムプロンプトの利用切り替え](#3-3-システムプロンプトの利用切り替え)
 - [ディレクトリ構成およびコードの説明](#ディレクトリ構成およびコードの説明)
 - [Converse API Deep Dive](#converse-api-deep-dive)
   - [モデルが不必要にツールを利用してしまう課題](#モデルが不必要にツールを利用してしまう課題)
-  - [Use tools で Claude3 Opus を利用したの場合のレスポンスについて](#use-tools-で-claude3-opus-を利用したの場合のレスポンスについて)
+  - [Tool use で Claude3 Opus を利用したの場合のレスポンスについて](#tool-use-で-claude3-opus-を利用したの場合のレスポンスについて)
   - [ツール実行のための引数生成が必ずしも成功するとは限らない](#ツール実行のための引数生成が必ずしも成功するとは限らない)
   - [会話履歴にツールの利用履歴がある場合，引数 toolConfig 無しで会話できない](#会話履歴にツールの利用履歴がある場合引数-toolconfig-無しで会話できない)
   - [Amazon Titan で Converse API を利用する際の引数`stop sequence`について](#amazon-titan-で-converse-api-を利用する際の引数stop-sequenceについて)
@@ -29,13 +29,13 @@
 
 ## 目的
 
-2024/05/31 に，Amazon Bedrock の新機能である Converse API がリリースされた．本 API では，統一的なインターフェースで Bedrock のモデルの切り替えや推論パラメータの設定，外部のツールの利用（Use tools）などが可能であり，従来の InvokeModel API のようにストリーミング処理も可能である．本リポジトリでは，Converse API の機能を全て活用したチャットアプリを公開し，その機能や気づいた点を紹介する．
+2024/05/31 に，Amazon Bedrock の新機能である Converse API がリリースされた．本 API では，統一的なインターフェースで Bedrock のモデルの切り替えや推論パラメータの設定，外部のツールの利用（Tool use）などが可能であり，従来の InvokeModel API のようにストリーミング処理も可能である．本リポジトリでは，Converse API の機能を全て活用したチャットアプリを公開し，その機能や気づいた点を紹介する．
 
 ## オリジナリティ
 
 執筆時点（2024/06/06）では，以下を満たすチャットアプリは aws-samples などには存在しない．
 
-- ConverseStreamAPI と Use tools を組合せた実装
+- ConverseStreamAPI と Tool use を組合せた実装
 - Streamlit の ChatUI を利用したチャットアプリケーション
 - 参考のため，機能を削ぎ落としたシンプルな実装例も公開
   - `src/basic_code`に格納している
@@ -51,7 +51,7 @@
 - 本リポジトリをクローン
 
 ```bash
-git clone https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools.git
+git clone https://github.com/ren8k/aws-bedrock-converse-app-use-tools.git
 cd aws-bedrock-chat-app-with-use-tools
 ```
 
@@ -81,7 +81,7 @@ bash run_app.sh
 
 ## アプリの機能
 
-本アプリの機能として，① リージョン・モデルの切り替え機能，② 推論パラメータの設定機能，③ オプション機能（ストリーミング機能・Use tools・システムプロンプトの利用選択）がある．本機能は，アプリの左側のサイドバーにて利用可能である．
+本アプリの機能として，① リージョン・モデルの切り替え機能，② 推論パラメータの設定機能，③ オプション機能（ストリーミング機能・Tool use・システムプロンプトの利用選択）がある．本機能は，アプリの左側のサイドバーにて利用可能である．
 
 <img src="./assets/chat-ui-function.png" width="800">
 
@@ -115,12 +115,12 @@ Converse API では，引数`inference_config`に対し，以下の推論パラ�
 
 ### 3. オプション機能
 
-ストリーミング機能の利用，Use tools の利用，システムプロンプトの利用を設定可能である．モデルによっては，ストリーミング機能や Tools，システムプロンプトを利用できない[^5-1]ため，その場合は OFF にして利用することを想定している．以下に，Converse API で利用可能なモデルと，サポートされている機能を示す．なお，以下の表は，執筆時点（2024/06/06）の AWS 公式ドキュメント[^5-1]から引用したものである．
+ストリーミング機能の利用，Tool use の利用，システムプロンプトの利用を設定可能である．モデルによっては，ストリーミング機能や Tools，システムプロンプトを利用できない[^5-1]ため，その場合は OFF にして利用することを想定している．以下に，Converse API で利用可能なモデルと，サポートされている機能を示す．なお，以下の表は，執筆時点（2024/06/06）の AWS 公式ドキュメント[^5-1]から引用したものである．
 
 <img src="./assets/supported_model_table.png" width="800">
 
 > [!IMPORTANT]
-> 特に，Streaming に対応しているのは Claude3 のみである点や，Use tools に対応しているのは Claude3, Command R+, Mistral AI Large のみである点に注意されたい．
+> 特に，Streaming に対応しているのは Claude3 のみである点や，Tool use に対応しているのは Claude3, Command R+, Mistral AI Large のみである点に注意されたい．
 
 以降，各オプション機能について説明する．
 
@@ -128,9 +128,9 @@ Converse API では，引数`inference_config`に対し，以下の推論パラ�
 
 トグルを ON にすると，`ConverseStream API`を利用でき，OFF にすると，`Converse API`を利用できる．なお，本機能は会話の途中でも自由に切り替えることが可能である．（会話の履歴は引き継がれる．）
 
-#### 3-2. Use tools の利用切り替え
+#### 3-2. Tool use の利用切り替え
 
-トグルを ON にすると，`Use tools`を利用できる．なお，tools の定義は[`tools_definition.json`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_definition.json)に，tools の実装は[`tools_func.py`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_func.py)に定義してある．
+トグルを ON にすると，`Tool use`を利用できる．なお，tools の定義は[`tools_definition.json`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_definition.json)に，tools の実装は[`tools_func.py`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_func.py)に定義してある．
 
 本実装で利用可能なツールは以下の通りである．（簡単のため，ツール内の実装は非常にシンプルにしている．）
 
@@ -260,11 +260,11 @@ class ToolsList:
 
 ## Converse API Deep Dive
 
-本章では，Converse API でツールを利用する際の注意点について解説する．特に，Claude 3 のモデル毎のツールの利用傾向やプロンプトによるツール利用の制御方法，Claude3 Opus のレスポンスに含まれる CoT の内容，ツール実行時の引数生成の失敗ケースなど，Use tools を利用する上で知っておくべき留意点を幅広く取り上げる．また，Converse API がサポートするモデルの一部の引数には制限がある点についても説明する．
+本章では，Converse API でツールを利用する際の注意点について解説する．特に，Claude 3 のモデル毎のツールの利用傾向やプロンプトによるツール利用の制御方法，Claude3 Opus のレスポンスに含まれる CoT の内容，ツール実行時の引数生成の失敗ケースなど，Tool use を利用する上で知っておくべき留意点を幅広く取り上げる．また，Converse API がサポートするモデルの一部の引数には制限がある点についても説明する．
 
 ### モデルが不必要にツールを利用してしまう課題
 
-Use tools の設定を行った上で Converse API を利用すると，モデルが不必要にツールを利用してしまうことがある．例えば，モデルの知識で十分回答できる質問に対しても，Web 検索ツールを利用して回答してしまう．個人的な印象としては，Claude3 Haiku や Opus はツールを利用することが非常に多く，プロンプトでの制御も難しい．一方，Claude3 Sonnet もツールを利用する傾向が強いが，プロンプトでの制御がある程度効きやすい．
+Tool use の設定を行った上で Converse API を利用すると，モデルが不必要にツールを利用してしまうことがある．例えば，モデルの知識で十分回答できる質問に対しても，Web 検索ツールを利用して回答してしまう．個人的な印象としては，Claude3 Haiku や Opus はツールを利用することが非常に多く，プロンプトでの制御も難しい．一方，Claude3 Sonnet もツールを利用する傾向が強いが，プロンプトでの制御がある程度効きやすい．
 
 以下に，各モデルにおけるツールの利用傾向を示す．（下記は個人環境での実験結果に基づく主観的な印象である点に注意されたい．）
 
@@ -298,15 +298,15 @@ Anthropic の公式ドキュメント[^6-1]やコード[^6-2]を参考に，下�
 > [!NOTE]
 > Claude3 Sonnet の場合，上記のようなシステムプロンプトでうまく制御できたが，Mistral AI Large の場合は，ツールの利用傾向が低くなるように観察された．モデルの特性を踏まえ，モデル毎に適切なシステムプロンプトを設計することが重要である．
 
-### Use tools で Claude3 Opus を利用したの場合のレスポンスについて
+### Tool use で Claude3 Opus を利用したの場合のレスポンスについて
 
-Use tools の設定を行った上で，Claude3 Opus で Converse API を利用すると，レスポンスに必ず CoT の内容が含まれる．具体的には，Converse API で引数`toolConfig`を指定すると，以下のように，`<thinking>`タグ内でどの tools を利用すべきかを思考する．本現象は仕様なのかは不明であるが，もし仕様であれば，CoT の内容は出力しないように工夫すると良いかもしれない．
+Tool use の設定を行った上で，Claude3 Opus で Converse API を利用すると，レスポンスに必ず CoT の内容が含まれる．具体的には，Converse API で引数`toolConfig`を指定すると，以下のように，`<thinking>`タグ内でどの tools を利用すべきかを思考する．本現象は仕様なのかは不明であるが，もし仕様であれば，CoT の内容は出力しないように工夫すると良いかもしれない．
 
 <img src="./assets/opus_cot.png" width="600">
 
 ### ツール実行のための引数生成が必ずしも成功するとは限らない
 
-Use tools では，LLM がツールの引数を生成し，ユーザーがツールの実行を行うが，必ずしもツールの引数生成が成功するとは限らない．Claude3 を利用する場合はほぼ失敗はしないが，Command R+ などのモデルを利用する場合，ツールの引数生成に失敗（引数が不足するなど）することが度々ある．
+Tool use では，LLM がツールの引数を生成し，ユーザーがツールの実行を行うが，必ずしもツールの引数生成が成功するとは限らない．Claude3 を利用する場合はほぼ失敗はしないが，Command R+ などのモデルを利用する場合，ツールの引数生成に失敗（引数が不足するなど）することが度々ある．
 
 ツールの引数生成失敗に伴うツールの実行失敗を回避するためのリトライの仕組みを実装することが望ましい．（本実装では取り入れていないが，ツールの実行に失敗した場合，エラーの内容を含めて LLM に情報を送信し，それを踏まえて再度引数を生成させることは可能である．[^6-3]）
 
