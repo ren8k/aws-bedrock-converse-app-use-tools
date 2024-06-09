@@ -23,7 +23,9 @@
   - [Tool use で Claude3 Opus を利用したの場合のレスポンスについて](#tool-use-で-claude3-opus-を利用したの場合のレスポンスについて)
   - [ツール実行のための引数生成が必ずしも成功するとは限らない](#ツール実行のための引数生成が必ずしも成功するとは限らない)
   - [会話履歴にツールの利用履歴がある場合，引数 toolConfig 無しで会話できない](#会話履歴にツールの利用履歴がある場合引数-toolconfig-無しで会話できない)
-  - [Tool use 利用時における ConverseStreamAPI のレスポンスの不確定性](#tool-use-利用時における-conversestreamapi-のレスポンスの不確定性)
+  - [Claude3 で Tool use 利用時における Converse API のレスポンスの不確定性](#claude3-で-tool-use-利用時における-converse-api-のレスポンスの不確定性)
+    - [Converse API の場合](#converse-api-の場合)
+    - [ConverseStream API の場合](#conversestream-api-の場合)
   - [モデル毎の Tool use 利用時における Converse API のレスポンスの差分](#モデル毎の-tool-use-利用時における-converse-api-のレスポンスの差分)
   - [Amazon Titan で Converse API を利用する際の引数`stop sequence`について](#amazon-titan-で-converse-api-を利用する際の引数stop-sequenceについて)
   - [AI21 Lab で Converse API を利用する際の引数`messages`について](#ai21-lab-で-converse-api-を利用する際の引数messagesについて)
@@ -322,11 +324,39 @@ botocore.errorfactory.ValidationException: An error occurred (ValidationExceptio
 
 本アプリでは，ツールの利用有無をいつでも切り替えることができるが，ツール有り-> ツール無しに切り替える場合，エラーが発生し得る点に注意されたい．
 
-### Tool use 利用時における ConverseStreamAPI のレスポンスの不確定性
+### Claude3 で Tool use 利用時における Converse API のレスポンスの不確定性
 
-Claude3 でストリーミング処理で Tool use を利用する場合，ConverseStream API におけるレスポンス `response["stream"]`には，ツールリクエストのための情報（`toolUse`）に加え，生成されたテキストが含まれることがある．具体的には，ストリーミングのレスポンス`response["stream"]["contentBlockDelta"]["delta"]["text"]`にテキストが含まれることがある．
+Claude3 で Tool use を利用する場合，Converse API，ConverseStream API のレスポンスには，ツールリクエストのための情報（`toolUse`）に加え，生成されたテキスト（`text`）が含まれることがある．
 
-以下に，Claude3 に「京都の天気を教えて」と指示した際の ConverseStream API のレスポンス`response["stream"]`の例を示す．
+#### Converse API の場合
+
+レスポンス`response["output"]["message"]["content"]`内に`text`が含まれることがある．以下に，Claude3 に「京都府京都市の天気を教えて」と指示した際の Converse API のレスポンス`response["output"]`の例を示す．
+
+```json
+{
+  "output": {
+    "message": {
+      "content": [
+        { "text": "わかりました。京都府京都市の天気を調べてみましょう。" },
+        {
+          "toolUse": {
+            "input": { "city": "京都市", "prefecture": "京都府" },
+            "name": "get_weather",
+            "toolUseId": "tooluse_pJ89iJJ4TpywTlztW62UvQ"
+          }
+        }
+      ],
+      "role": "assistant"
+    }
+  }
+}
+```
+
+上記では，「わかりました。京都府京都市の天気を調べてみましょう。」というテキスト（`text`）に加え，天気予報取得ツールを利用するための情報（`toolUse`）が含まれている．
+
+#### ConverseStream API の場合
+
+ストリーミングのレスポンス`response["stream"]["contentBlockDelta"]["delta"]["text"]`にテキストが含まれることがある．以下に，Claude3 に「京都府京都市の天気を教えて」と指示した際の ConverseStream API のレスポンス`response["stream"]`の例を示す．
 
 ```
 {'messageStart': {'role': 'assistant'}}
@@ -356,7 +386,7 @@ Claude3 でストリーミング処理で Tool use を利用する場合，Conve
 {'metadata': {'usage': {'inputTokens': 1219, 'outputTokens': 67, 'totalTokens': 1286}, 'metrics': {'latencyMs': 913}}}
 ```
 
-上記では，「はい、分かりました。」というテキストに加え，天気予報取得ツールを利用するための情報（`toolUse`）が含まれている．上記を整理すると，以下のような情報を出力している．（上記の`input`内の日本語は，Unicode エスケープシーケンスになっている．）
+上記では，「はい、分かりました。」というテキスト（`text`）に加え，天気予報取得ツールを利用するための情報（`toolUse`）が含まれている．上記を整理すると，以下のような情報を出力している．（上記の`input`内の日本語は，Unicode エスケープシーケンスになっている．）
 
 ```json
 {
@@ -374,11 +404,11 @@ Claude3 でストリーミング処理で Tool use を利用する場合，Conve
 }
 ```
 
-ConverseStreamAPI のレスポンスにテキストが含まれるかは会話内容に依存し不確定であるため，レスポンスの解析には注意が必要である．
+Converse API, ConverseStream API のレスポンスにテキストが含まれるかは会話内容に依存し不確定であるため，レスポンスの解析には注意が必要である．
 
 ### モデル毎の Tool use 利用時における Converse API のレスポンスの差分
 
-Claude3 や Mistral AI Large で Tool use を利用する場合， Converse API におけるレスポンス `response["output"]["message"]`にはテキストは含まれない．以下に，Claude3 に「京都の天気を教えて」と指示した際の Converse API のレスポンス`response["output"]["message"]`を示す．
+Mistral AI Large で Tool use を利用する場合， Converse API におけるレスポンス `response["output"]["message"]`にはテキストは含まれない．以下に Mistral AI Large に「京都府京都市の天気を教えて」と指示した際の Converse API のレスポンス`response["output"]["message"]`を示す．
 
 ```json
 {
@@ -395,12 +425,12 @@ Claude3 や Mistral AI Large で Tool use を利用する場合， Converse API 
 }
 ```
 
-一方，Command R+ で Tool use を利用する場合，Converse API におけるレスポンス `response["output"]["message"]`には必ず生成されたテキストが含まれる．以下に，Command R+ に「京都の天気を教えて」と指示した際の Converse API のレスポンス`response["output"]["message"]`を示す．
+一方，Command R+ で Tool use を利用する場合，Converse API におけるレスポンス `response["output"]["message"]`には必ず生成されたテキストが含まれる．以下に，Command R+ に「京都府京都市の天気を教えて」と指示した際の Converse API のレスポンス`response["output"]["message"]`を示す．
 
 ```json
 {
   "content": [
-    { "text": "京都の天気を検索して、ユーザーに知らせます。" },
+    { "text": "京都府京都市の天気を検索して、ユーザーに知らせます。" },
     {
       "toolUse": {
         "input": { "city": "京都市", "prefecture": "京都府" },
