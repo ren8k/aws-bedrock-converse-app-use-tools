@@ -404,7 +404,8 @@ Claude3 で Tool use を利用する場合，Converse API，ConverseStream API �
 }
 ```
 
-Converse API, ConverseStream API のレスポンスにテキストが含まれるかは会話内容に依存し不確定であるため，レスポンスの解析には注意が必要である．
+> [!NOTE]
+> Converse API, ConverseStream API のレスポンスにテキストが含まれるかは会話内容に依存し不確定であるため，レスポンスの解析には注意が必要である．
 
 ### モデル毎の Tool use 利用時における Converse API のレスポンスの差分
 
