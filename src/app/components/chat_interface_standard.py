@@ -27,6 +27,7 @@ class ChatInterfaceStandard:
                 st.session_state.messages, self.cfg
             )
             output_msg = response["output"]["message"]
+            output_msg = self.extract_answer(output_msg, response["stopReason"])
 
             # check tool use
             if response["stopReason"] == "tool_use":
@@ -39,10 +40,11 @@ class ChatInterfaceStandard:
                     st.session_state.messages, self.cfg
                 )
                 output_msg = response["output"]["message"]
+                output_msg = self.extract_answer(output_msg)
 
             self.display_msg_content(output_msg)
             self.update_chat_history(output_msg)
-            self.print_history(st.session_state.messages)
+            # self.print_history(st.session_state.messages)
 
     def print_history(self, history):
         print("#" * 50)
@@ -56,6 +58,21 @@ class ChatInterfaceStandard:
             # exclude use tool result
             if "text" in message["content"][0]:
                 self.display_msg_content(message)
+
+    def extract_answer(self, output_msg, stop_reason=None):
+        import re
+
+        if "text" in output_msg["content"][0]:
+            text = output_msg["content"][0]["text"]
+            print(text)
+            pattern = r"<a>(.*?)</a>"
+            match = re.search(pattern, text, re.DOTALL)
+            if match:
+                output_msg["content"][0]["text"] = match.group(1)
+            elif stop_reason == "tool_use":
+                output_msg["content"][0]["text"] = "Using tool..."
+        # if text does not include <a> tag, return original output_msg
+        return output_msg
 
     def display_msg_content(self, message):
         # when request is tool use, sometimes not have text
