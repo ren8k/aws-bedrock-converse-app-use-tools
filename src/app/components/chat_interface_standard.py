@@ -29,7 +29,7 @@ class ChatInterfaceStandard:
             output_msg = response["output"]["message"]
 
             # check tool use
-            if response["stopReason"] == "tool_use":
+            while response["stopReason"] == "tool_use":
                 self.display_msg_content(output_msg)
                 self.update_chat_history(output_msg)
                 tool_use_args = self.get_tool_use_args(output_msg)
