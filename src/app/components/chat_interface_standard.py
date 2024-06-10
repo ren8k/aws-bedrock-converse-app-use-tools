@@ -1,5 +1,6 @@
 import copy
 import json
+import re
 from pprint import pprint
 
 import streamlit as st
@@ -44,7 +45,7 @@ class ChatInterfaceStandard:
 
             self.display_msg_content(output_msg)
             self.update_chat_history(output_msg)
-            # self.print_history(st.session_state.messages)
+            self.print_history(st.session_state.messages)
 
     def print_history(self, history):
         print("#" * 50)
@@ -60,8 +61,6 @@ class ChatInterfaceStandard:
                 self.display_msg_content(message)
 
     def extract_answer(self, output_msg, stop_reason=None):
-        import re
-
         if "text" in output_msg["content"][0]:
             text = output_msg["content"][0]["text"]
             print(text)
