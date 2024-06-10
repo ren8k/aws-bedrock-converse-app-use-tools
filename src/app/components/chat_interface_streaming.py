@@ -48,7 +48,6 @@ class ChatInterfaceStreaming:
                     st.session_state.messages, self.cfg
                 )
                 generated_text = self.display_streaming_msg_content(response["stream"])
-                self.tool_use_mode = False
 
             output_msg = {"role": "assistant", "content": [{"text": generated_text}]}
             self.update_chat_history(output_msg)
@@ -85,13 +84,14 @@ class ChatInterfaceStreaming:
                 self.tool_use_args.update(
                     event["contentBlockStart"]["start"]["toolUse"]
                 )
-
-            if (
-                "messageStop" in event
-                and event["messageStop"]["stopReason"] == "tool_use"
-            ):
-                self.tool_use_args["input"] = json.loads(tool_use_input)
-                self.tool_use_mode = True
+            if "messageStop" in event:
+                stop_reason = event["messageStop"]["stopReason"]
+                if stop_reason == "tool_use":
+                    self.tool_use_args["input"] = json.loads(tool_use_input)
+                    self.tool_use_mode = True
+                else:
+                    # if stop_reason == 'end_turn'|'max_tokens'|'stop_sequence'|'content_filtered'
+                    self.tool_use_mode = False
 
     def tinking_stream(self):
         message = "Using Tools..."
