@@ -16,6 +16,7 @@ class ChatInterfaceStreaming:
             "toolUseId": "",
         }
         self.tool_use_mode = False
+        self.message_cache = ""
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
@@ -40,6 +41,7 @@ class ChatInterfaceStreaming:
                     generated_text, self.tool_use_args
                 )
                 self.update_chat_history(output_msg)
+                self.tool_use_mode = False
 
                 tool_result_msg = self.execute_tool()
                 self.update_chat_history(tool_result_msg)
@@ -48,11 +50,10 @@ class ChatInterfaceStreaming:
                     st.session_state.messages, self.cfg
                 )
                 generated_text = self.display_streaming_msg_content(response["stream"])
-                self.tool_use_mode = False
 
             output_msg = {"role": "assistant", "content": [{"text": generated_text}]}
             self.update_chat_history(output_msg)
-            self.print_history(st.session_state.messages)
+            # self.print_history(st.session_state.messages)
 
     def print_history(self, history):
         print("#" * 50)
@@ -71,14 +72,27 @@ class ChatInterfaceStreaming:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"][0]["text"])
 
+    def chache_msg(self, delta):
+        # if message of llm does note include <a> tag, cache the message
+        self.message_cache += delta["text"]
+
     def parse_stream(self, response_stream):
         #  extract the LLM's output and tool's input from the streaming response.
         tool_use_input = ""
+        self.message_cache = ""
+        answer_mode = False
         for event in response_stream:
+            print(event)
             if "contentBlockDelta" in event:
                 delta = event["contentBlockDelta"]["delta"]
                 if "text" in delta:
-                    yield delta["text"]
+                    self.chache_msg(delta)
+                    if "<a>" in delta["text"]:
+                        answer_mode = True
+                    elif "</a>" in delta["text"]:
+                        answer_mode = False
+                    elif answer_mode:
+                        yield delta["text"]
                 if "toolUse" in delta:
                     tool_use_input += delta["toolUse"]["input"]
             if "contentBlockStart" in event:
@@ -93,8 +107,7 @@ class ChatInterfaceStreaming:
                 self.tool_use_args["input"] = json.loads(tool_use_input)
                 self.tool_use_mode = True
 
-    def tinking_stream(self):
-        message = "Using Tools..."
+    def stream_message(self, message):
         for word in message.split():
             yield word + " "
 
@@ -103,7 +116,11 @@ class ChatInterfaceStreaming:
             with st.chat_message("assistant"):
                 generated_text = st.write_stream(self.parse_stream(response_stream))
                 if not generated_text:
-                    generated_text = st.write_stream(self.tinking_stream())
+                    if self.tool_use_mode:
+                        message = "Using Tools..."
+                    else:
+                        message = self.message_cache
+                    generated_text = st.write_stream(self.stream_message(message))
         return generated_text
 
     def create_tool_request_msg(self, generated_text, tool_use_args):
