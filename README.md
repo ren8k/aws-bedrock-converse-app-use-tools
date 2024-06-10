@@ -21,6 +21,8 @@
 - [Converse API Deep Dive](#converse-api-deep-dive)
   - [モデルが不必要にツールを利用してしまう課題](#モデルが不必要にツールを利用してしまう課題)
   - [Tool use で Claude3 Opus を利用したの場合のレスポンスについて](#tool-use-で-claude3-opus-を利用したの場合のレスポンスについて)
+    - [具体的な実装例（ConverseStream API の場合）](#具体的な実装例conversestream-api-の場合)
+    - [具体的な実装例（Converse API の場合）](#具体的な実装例converse-api-の場合)
   - [ツール実行のための引数生成が必ずしも成功するとは限らない](#ツール実行のための引数生成が必ずしも成功するとは限らない)
   - [会話履歴にツールの利用履歴がある場合，引数 toolConfig 無しで会話できない](#会話履歴にツールの利用履歴がある場合引数-toolconfig-無しで会話できない)
   - [Claude3 で Tool use 利用時における Converse API のレスポンスの不確定性](#claude3-で-tool-use-利用時における-converse-api-のレスポンスの不確定性)
@@ -79,7 +81,7 @@ cd src/app
 bash run_app.sh
 ```
 
-- ターミナルに表示された URL 経由でアプリが自動起動
+- ターミナルに表示された URL 経由でアプリを起動
 
 <img src="./assets/chat-ui.png" width="800">
 
@@ -270,6 +272,8 @@ class ToolsList:
 
 Tool use 利用時，モデルが不必要にツールを利用してしまうことがある．例えば，モデルの知識で十分回答できる質問に対しても，Web 検索ツールを利用して回答してしまう．個人的な印象としては，Claude3 Haiku や Opus はツールを利用することが非常に多く，プロンプトでの制御も難しい．一方，Claude3 Sonnet もツールを利用する傾向が強いが，プロンプトでの制御がある程度効きやすい．
 
+> [!TIP] > [Anthropic 公式の Tool use の学習コンテンツ](https://github.com/anthropics/courses/blob/master/ToolUse/04_complete_workflow.ipynb)においても，プロンプトエンジニアリング時に，Claude3 Sonnet を利用している．
+
 以下に，各モデルにおけるツールの利用傾向を示す．（下記は個人環境での実験結果に基づく主観的な印象である点に注意されたい．）
 
 | モデル         | ツールの利用傾向                                         |
@@ -307,6 +311,186 @@ Anthropic の公式ドキュメント[^6-1]やコード[^6-2]を参考に，下�
 Tool use の設定を行った上で，Claude3 Opus で Converse API を利用すると，レスポンスに必ず CoT の内容が含まれる．具体的には，Converse API で引数`toolConfig`を指定すると，以下のように，`<thinking>`タグ内でどの tools を利用すべきかを思考する．本現象は仕様なのかは不明であるが，もし仕様であれば，CoT の内容は出力しないように工夫すると良いかもしれない．
 
 <img src="./assets/opus_cot.png" width="600">
+
+#### 具体的な実装例（ConverseStream API の場合）
+
+ストリーミング処理で，CoT の内容を含まずに LLM の回答を出力する場合，`src/app/components/chat_interface_streaming.py`の`parse_stream`メソッドを以下のように修正するアイデアがある．具体的には，`<a>`タグで囲まれた LLM の回答のみを表示し，`<thinking>`タグ内の CoT の内容を表示しないようにするようにしている．
+
+```py
+def __init__(self, bedrock, cfg):
+    self.bedrock = bedrock
+    self.cfg = cfg
+    self.tool_use_args = {
+        "input": {},
+        "name": "",
+        "toolUseId": "",
+    }
+    self.tool_use_mode = False
+    self.message_cache = ""
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+def run(self):
+    st.title("Bedrock ConverseStream API Chatbot")
+
+    self.display_history(st.session_state.messages)
+
+    if prompt := st.chat_input("What's up?"):
+        input_msg = {"role": "user", "content": [{"text": prompt}]}
+        self.display_msg_content(input_msg)
+        self.update_chat_history(input_msg)
+
+        response = self.bedrock.generate_response(
+            st.session_state.messages, self.cfg
+        )
+        generated_text: str = self.display_streaming_msg_content(response["stream"])
+
+        # check tool use
+        if self.tool_use_mode:
+            output_msg = self.create_tool_request_msg(
+                generated_text, self.tool_use_args
+            )
+            self.update_chat_history(output_msg)
+            self.tool_use_mode = False
+
+            tool_result_msg = self.execute_tool()
+            self.update_chat_history(tool_result_msg)
+
+            response = self.bedrock.generate_response(
+                st.session_state.messages, self.cfg
+            )
+            generated_text = self.display_streaming_msg_content(response["stream"])
+
+        output_msg = {"role": "assistant", "content": [{"text": generated_text}]}
+        self.update_chat_history(output_msg)
+        # self.print_history(st.session_state.messages)
+
+def chache_msg(self, delta):
+    # if message of llm does note include <a> tag, cache the message
+    self.message_cache += delta["text"]
+
+def parse_stream(self, response_stream):
+    #  extract the LLM's output and tool's input from the streaming response.
+    tool_use_input = ""
+    self.message_cache = ""
+    answer_mode = False
+    for event in response_stream:
+        print(event)
+        if "contentBlockDelta" in event:
+            delta = event["contentBlockDelta"]["delta"]
+            if "text" in delta:
+                self.chache_msg(delta)
+                if "<a>" in delta["text"]:
+                    answer_mode = True
+                elif "</a>" in delta["text"]:
+                    answer_mode = False
+                elif answer_mode:
+                    yield delta["text"]
+            if "toolUse" in delta:
+                tool_use_input += delta["toolUse"]["input"]
+        if "contentBlockStart" in event:
+            self.tool_use_args.update(
+                event["contentBlockStart"]["start"]["toolUse"]
+            )
+
+        if (
+            "messageStop" in event
+            and event["messageStop"]["stopReason"] == "tool_use"
+        ):
+            self.tool_use_args["input"] = json.loads(tool_use_input)
+            self.tool_use_mode = True
+
+def stream_message(self, message):
+    for word in message.split():
+        yield word + " "
+
+def display_streaming_msg_content(self, response_stream):
+    if response_stream:
+        with st.chat_message("assistant"):
+            generated_text = st.write_stream(self.parse_stream(response_stream))
+            if not generated_text:
+                if self.tool_use_mode:
+                    message = "Using Tools..."
+                else:
+                    message = self.message_cache
+                generated_text = st.write_stream(self.stream_message(message))
+    return generated_text
+```
+
+また，上記のように修正する場合，システムプロンプトは以下のように修正し，LLM の最終的な回答を<a>タグで囲むように指示する必要がある．
+
+```
+あなたは日本人のAIアシスタントです。必ず日本語で回答する必要があります。
+以下の<rule>タグ内には厳守すべきルールが記載されています。以下のルールを絶対に守り、ツールを不必要に使用しないで下さい。
+<rule>
+- あなたはツールにアクセスできますが、必要な場合にのみそれらを使用してください。
+- 自身の知識で回答できない場合のみ、関連するツールを使用してユーザーの要求に答えてください。
+- 必ず回答は<a>タグで囲みなさい。
+</rule>
+
+ツールを呼び出す前に、<thinking>タグ内で分析を行ってください。まず、提供されたツールのうち、ユーザーの要求に答えるのに関連するツールはどれかを考えてください。次に、関連するツールの必須パラメータを1つずつ確認し、ユーザーが直接提供したか、値を推測するのに十分な情報を与えているかを判断します。
+
+パラメータを推測できるかどうかを決める際は、特定の値をサポートするかどうかを慎重に検討してください。必須パラメータの値がすべて存在するか、合理的に推測できる場合は、<thinking>タグを閉じてツールの呼び出しに進みます。ただし、必須パラメータの値の1つが欠落している場合は、関数を呼び出さず(欠落しているパラメータに値を入れても呼び出さない)、代わりにユーザーに欠落しているパラメータの提供を求めてください。提供されていないオプションのパラメータについては、追加情報を求めないでください。
+
+以下の形式で回答を出力する必要があります。<a>タグを利用し、フォーマットに注意して、正確に従ってください。
+<thinking>分析内容</thinking>
+<a>ユーザーの質問に対する回答内容</a>
+```
+
+#### 具体的な実装例（Converse API の場合）
+
+Converse API の場合，`src/app/components/chat_interface_standard.py`に`extract_answer`メソッド追加し，`run`メソッド内で利用するアイデアがある．
+
+```py
+def extract_answer(self, output_msg, stop_reason=None):
+    import re
+
+    if "text" in output_msg["content"][0]:
+        text = output_msg["content"][0]["text"]
+        print(text)
+        pattern = r"<a>(.*?)</a>"
+        match = re.search(pattern, text, re.DOTALL)
+        if match:
+            output_msg["content"][0]["text"] = match.group(1)
+        elif stop_reason == "tool_use":
+            output_msg["content"][0]["text"] = "Using tool..."
+    # if text dont include <a> tag, return original output_msg
+    return output_msg
+
+
+def run(self):
+    st.title("Bedrock Converse API Chatbot")
+
+    self.display_history(st.session_state.messages)
+
+    if prompt := st.chat_input("What's up?"):
+        input_msg = {"role": "user", "content": [{"text": prompt}]}
+        self.display_msg_content(input_msg)
+        self.update_chat_history(input_msg)
+
+        response = self.bedrock.generate_response(
+            st.session_state.messages, self.cfg
+        )
+        output_msg = response["output"]["message"]
+        output_msg = self.extract_answer(output_msg, response["stopReason"])
+
+        # check tool use
+        if response["stopReason"] == "tool_use":
+            self.display_msg_content(output_msg)
+            self.update_chat_history(output_msg)
+            tool_use_args = self.get_tool_use_args(output_msg)
+            tool_result_msg = self.execute_tool(tool_use_args)
+            self.update_chat_history(tool_result_msg)
+            response = self.bedrock.generate_response(
+                st.session_state.messages, self.cfg
+            )
+            output_msg = response["output"]["message"]
+            output_msg = self.extract_answer(output_msg)
+
+        self.display_msg_content(output_msg)
+        self.update_chat_history(output_msg)
+        self.print_history(st.session_state.messages)
+```
 
 ### ツール実行のための引数生成が必ずしも成功するとは限らない
 
