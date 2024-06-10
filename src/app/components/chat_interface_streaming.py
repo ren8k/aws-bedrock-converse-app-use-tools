@@ -35,7 +35,7 @@ class ChatInterfaceStreaming:
             generated_text: str = self.display_streaming_msg_content(response["stream"])
 
             # check tool use
-            if self.tool_use_mode:
+            while self.tool_use_mode:
                 output_msg = self.create_tool_request_msg(
                     generated_text, self.tool_use_args
                 )
