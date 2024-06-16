@@ -1,96 +1,94 @@
-# Bedrock（with Converse API + Tool use）を利用したチャットアプリ<!-- omit in toc -->
+# Chat App using Bedrock (with Converse API + Tool use)<!-- omit in toc -->
 
-本リポジトリでは，Amazon Bedrock の Converse API (Converse [^1-1], ConverseStream[^1-2]) Tool use (function calling) [^1-3], Streamlit を利用したチャットアプリの python 実装を公開する．
-
-> [!NOTE]
-> 本アプリおよび，Converse API や Tool use の解説記事を Qiita に投稿しております．
-> 是非そちらもご覧下さい！
-> <br> > [Amazon Bedrock Converse API と Tool use を知識ゼロから学び，発展的なチャットアプリを実装する](https://qiita.com/ren8k/items/64c4a3de56b886942251)
+This repository presents a Python implementation of a chat application using Amazon Bedrock's Converse API (Converse [^1-1], ConverseStream [^1-2]), Tool use (function calling) [^1-3], and Streamlit.
 
 > [!NOTE]
-> Converse API で Tool use を利用する際の注意点や応用的な内容を，[本ドキュメント](https://github.com/ren8k/aws-bedrock-converse-app-use-tools/blob/main/assets/README.md)に記載しました．[Qiita に投稿した内容](https://qiita.com/ren8k/items/64c4a3de56b886942251)と重複してりますが，ツールリクエスト生成時に CoT を利用する際のコードの改修例などを記載しております．是非ご覧下さい．
+> I have posted an article on Qiita explaining this application and the Converse API and Tool use.
+> Please check it out!
+> <br> [Learn Amazon Bedrock Converse API and Tool use from scratch and implement an advanced chat application](https://qiita.com/ren8k/items/64c4a3de56b886942251)
 
 <img src="./assets/demo.gif">
 
-## 目次<!-- omit in toc -->
+## Table of Contents<!-- omit in toc -->
 
-- [目的](#目的)
-- [オリジナリティ](#オリジナリティ)
-- [前提](#前提)
-- [手順](#手順)
-- [アプリの機能](#アプリの機能)
-  - [1. リージョン・モデルの切り替え機能](#1-リージョンモデルの切り替え機能)
-  - [2. 推論パラメータの設定機能](#2-推論パラメータの設定機能)
-  - [3. オプション機能](#3-オプション機能)
-    - [3-1. ストリーミング機能の利用切り替え](#3-1-ストリーミング機能の利用切り替え)
-    - [3-2. Tool use の利用切り替え](#3-2-tool-use-の利用切り替え)
-    - [3-3. システムプロンプトの利用切り替え](#3-3-システムプロンプトの利用切り替え)
-- [ディレクトリ構成およびコードの説明](#ディレクトリ構成およびコードの説明)
+- [Objective](#objective)
+- [Originality](#originality)
+- [Prerequisites](#prerequisites)
+- [How to use](#how-to-use)
+- [Application Features](#application-features)
+  - [1. Region and Model Switching](#1-region-and-model-switching)
+  - [2. Inference Parameter Settings](#2-inference-parameter-settings)
+  - [3. Optional Features](#3-optional-features)
+    - [3-1. Streaming Feature Toggle](#3-1-streaming-feature-toggle)
+    - [3-2. Tool Use Toggle](#3-2-tool-use-toggle)
+    - [3-3. System Prompt Toggle](#3-3-system-prompt-toggle)
+- [Directory Structure and Code Explanation](#directory-structure-and-code-explanation)
 - [References](#references)
 
-## 目的
+## Objective
 
-2024/05/31 に，Amazon Bedrock の新機能である Converse API がリリースされた．本 API では，統一的なインターフェースで Bedrock のモデルの切り替えや推論パラメータの設定，外部のツールの利用（Tool use）などが可能であり，従来の InvokeModel API のようにストリーミング処理も可能である．本リポジトリでは，Converse API の機能を全て活用したチャットアプリを公開し，その機能や気づいた点を紹介する．
+On 2024/05/31, Amazon Bedrock released a new feature called the Converse API. This API provides a unified interface for switching Bedrock models, configuring inference parameters, utilizing external tools (Tool use), and enables streaming processing similar to the existing InvokeModel API. This repository presents a chat application that fully utilizes the features of the Converse API, introduces its functionality, and shares insights.
 
-## オリジナリティ
+## Originality
 
-執筆時点（2024/06/06）では，以下を満たすチャットアプリは aws-samples などには存在しない．
+As of the writing date (2024/06/06), there are no chat applications in aws-samples or elsewhere that satisfy the following:
 
-- ConverseStreamAPI と Tool use を組合せた実装
-- Streamlit の ChatUI を利用したチャットアプリケーション
-- 参考のため，機能を削ぎ落としたシンプルな実装例も公開
-  - `src/basic_code`に格納している
+- Implementation combining ConverseStreamAPI and Tool use
+- Chat application using Streamlit's ChatUI
+- Simplified implementation examples are also provided for reference
+  - Stored in src/basic_code
 
-## 前提
+## Prerequisites
 
-- 下記のリージョンで，Bedrock のモデルアクセスの有効化が適切になされている．
-  - `us-west-2`
-  - `us-east-1`
+In the following regions, Bedrock model access is properly enabled.
 
-## 手順
+- `us-west-2`
+- `us-east-1`
 
-- 本リポジトリをクローン
+## How to use
+
+- Clone this repository
 
 ```bash
 git clone https://github.com/ren8k/aws-bedrock-converse-app-use-tools.git
 cd aws-bedrock-chat-app-with-use-tools
 ```
 
-- 仮想環境の作成および有効化（任意）
+- Create and activate a virtual environment (optional)
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 ```
 
-- 必要なライブラリをインストール
+- Install the required libraries
 
 ```bash
 pip install -r requirements.txt
 ```
 
-- アプリの実行
+- Run the application
 
 ```bash
 cd src/app
 bash run_app.sh
 ```
 
-- ターミナルに表示された URL 経由でアプリを起動
+- Launch the application via the URL displayed in the terminal
 
 <img src="./assets/chat-ui.png" width="800">
 
-## アプリの機能
+## Application Features
 
-本アプリの機能として，① リージョン・モデルの切り替え機能，② 推論パラメータの設定機能，③ オプション機能（ストリーミング機能・Tool use・システムプロンプトの利用選択）がある．本機能は，アプリの左側のサイドバーにて利用可能である．
+The features of this application include ① Region and model switching, ② Inference parameter settings, and ③ Optional features (streaming feature, Tool use, and system prompt selection). These features are accessible from the sidebar on the left side of the application.
 
 <img src="./assets/chat-ui-function.png" width="800">
 
-以降，各機能について説明する．
+The following sections describe each feature.
 
-### 1. リージョン・モデルの切り替え機能
+### 1. Region and Model Switching
 
-リージョン（`us-west-2` or `us-east-1`）および，Converse API で利用可能なモデルを切り替えることができる．本実装で利用可能なモデルは以下の通りである．
+It is possible to switch between regions (`us-west-2` or `us-east-1`) and models available with the Converse API. The models available in this implementation are as follows:
 
 - `anthropic.claude-3-haiku-20240307-v1:0`
 - `anthropic.claude-3-sonnet-20240229-v1:0`
@@ -105,43 +103,43 @@ bash run_app.sh
 - `amazon.titan-text-premier-v1:0`
 - `amazon.titan-text-lite-v1`
 
-### 2. 推論パラメータの設定機能
+### 2. Inference Parameter Settings
 
-Converse API では，引数`inference_config`に対し，以下の推論パラメーターを指定することが可能である．本実装では，以下のパラメーターに加え，System Prompt も設定できるようにしている．
+With the Converse API, the following inference parameters can be specified for the `inference_config` argument. In addition to these parameters, this implementation also allows setting the System Prompt.
 
-- maxTokens: 生成トークンの最大数
-- stopSequences: 停止シーケンスのリスト（アプリケーション上ではカンマ区切りで指定）
-- temperature: 温度パラメーター
-- topP: 予測トークンの予測確率の累積値
+- maxTokens: Maximum number of generated tokens
+- stopSequences: List of stop sequences (specified as comma-separated values in the application)
+- temperature: Temperature parameter
+- topP: Cumulative probability of predicted tokens
 
-### 3. オプション機能
+### 3. Optional Features
 
-ストリーミング機能の利用，Tool use の利用，システムプロンプトの利用を設定可能である．モデルによっては，ストリーミング機能や Tools，システムプロンプトを利用できない[^5-1]ため，その場合は OFF にして利用することを想定している．以下に，Converse API で利用可能なモデルと，サポートされている機能を示す．なお，以下の表は，執筆時点（2024/06/06）の AWS 公式ドキュメント[^5-1]から引用したものである．
+It is possible to enable or disable the streaming feature, Tool use, and the use of system prompts. Some models do not support streaming, Tools, or system prompts [^5-1], so it is expected to turn them OFF when using such models. The table below shows the models available with the Converse API and the supported features. Please note that the table is quoted from the official AWS documentation [^5-1] as of the writing date (2024/06/06).
 
 <img src="./assets/supported_model_table.png" width="800">
 
 > [!IMPORTANT]
-> 特に，Streaming に対応しているのは Claude3 のみである点や，Tool use に対応しているのは Claude3, Command R+, Mistral AI Large のみである点に注意されたい．
+> Please note that only Claude3 supports Streaming, and only Claude3, Command R+, and Mistral AI Large support Tool use.
 
-以降，各オプション機能について説明する．
+The following sections explain each optional feature.
 
-#### 3-1. ストリーミング機能の利用切り替え
+#### 3-1. Streaming Feature Toggle
 
-トグルを ON にすると，`ConverseStream API`を利用でき，OFF にすると，`Converse API`を利用できる．なお，本機能は会話の途中でも自由に切り替えることが可能である．（会話の履歴は引き継がれる．）
+When the toggle is ON, the `ConverseStream API` is used, and when OFF, the `Converse API` is used. This feature can be freely switched during a conversation. (The conversation history is carried over.)
 
-#### 3-2. Tool use の利用切り替え
+#### 3-2. Tool Use Toggle
 
-トグルを ON にすると，`Tool use`を利用できる．なお，tools の定義は[`tools_definition.json`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_definition.json)に，tools の実装は[`tools_func.py`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_func.py)に定義してある．
+When the toggle is ON, `Tool use` is enabled. The tool definitions are in [`tools_definition.json`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_definition.json), and the tool implementations are defined in [`tools_func.py`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_func.py).
 
-本実装で利用可能なツールは以下の通りである．（簡単のため，ツール内の実装は非常にシンプルにしている．）
+The tools available in this implementation are as follows. (For simplicity, the implementations within the tools are kept very basic.)
 
-- 天気予報取得ツール: 引数として指定された`都道府県`と`市区町村`の天気予報を返す
-- Web 検索ツール: 引数として指定された`検索語`で Web 検索を行い、上位 3 件の検索結果のテキストを返す
+- Weather Forecast Tool: Returns the weather forecast for the specified `prefecture` and `city` arguments
+- Web Search Tool: Performs a web search using the specified `search_term` argument and returns the text of the top 3 search results
 
-参考のため，[`tools_definition.json`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_definition.json)と[`tools_func.py`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_func.py)の実装を以下に示す．（tools の実装については，AWS 公式リポジトリの実装例を参考にさせていただきました．）[^5-2]
+For reference, the implementations of [`tools_definition.json`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_definition.json) and [`tools_func.py`](https://github.com/ren8k/aws-bedrock-chat-app-with-use-tools/blob/main/src/app/tools/tools_func.py) are shown below. (The tool implementations were based on examples from the official AWS repository.) [^5-2]
 
 <details>
-<summary>tools関連の実装</summary>
+<summary>Tool-related implementations</summary>
 <br/>
 
 **tools_definition.json**
@@ -228,38 +226,41 @@ class ToolsList:
 </details>
 <br/>
 
-#### 3-3. システムプロンプトの利用切り替え
+#### 3-3. System Prompt Toggle
 
-トグルを ON にすると，`Converse API`および`ConverseStream API`の 引数`system`にシステムプロンプトを指定することができる．Off にすると，システムプロンプトは指定されない．
+When the toggle is ON, a system prompt can be specified in the system argument of the `Converse API` and `ConverseStream API`. When OFF, no system prompt is specified.
 
-## ディレクトリ構成およびコードの説明
+## Directory Structure and Code Explanation
 
-本アプリケーションの実装は，`src/app`ディレクトリ直下に配置されている．以下にディレクトリ構成を示す．
+The implementation of this application is located directly under the `src/app` directory. The directory structure is as follows:
 
 ```
 .
-├── app.py                            : Streamlit アプリケーションのエントリーポイント
+├── app.py                            : Entry point of the Streamlit application
 ├── components
 │   ├── __init__.py
-│   ├── chat_interface_standard.py    : Converse API を利用した chat interface
-│   ├── chat_interface_streaming.py   : ConverseStream API を利用した chat interface
-│   └── sidebar.py                    : UI のサイドバー
+│   ├── chat_interface_standard.py    : Chat interface using Converse API
+│   ├── chat_interface_streaming.py   : Chat interface using ConverseStream API
+│   └── sidebar.py                    : UI sidebar
 ├── config
-│   └── config.py                     : モデルの設定情報 (推論パラメーター，toolsの設定)
+│   └── config.py                     : Model configuration (inference parameters, tools settings)
 ├── llm
 │   ├── __init__.py
-│   └── bedrock_client.py             : Bedrock API のクライアント
-├── run_app.sh                        : Streamlit アプリケーションの起動スクリプト
+│   └── bedrock_client.py             : Bedrock API client
+├── run_app.sh                        : Streamlit application launch script
 ├── tools
 │   ├── __init__.py
-│   ├── tools_definition.json         : tools の定義
-│   └── tools_func.py                 : tools の実装 (天気予報取得，Web検索)
+│   ├── tools_definition.json         : Tools definition
+│   └── tools_func.py                 : Tools implementation (weather forecast, web search)
 └── utils
     ├── __init__.py
-    └── utils.py                      : ユーティリティ関数
+    └── utils.py                      : Utility functions
 ```
 
 ## References
+
+> [!NOTE]
+> We have included notes on using Tool use with the Converse API and advanced topics in [this document](https://github.com/ren8k/aws-bedrock-converse-app-use-tools/blob/main/assets/README.md). Although it overlaps with the content posted on [Qiita](https://qiita.com/ren8k/items/64c4a3de56b886942251), it includes examples of code modifications when using CoT for tool request generation. Please take a look.
 
 [^1-1]: [Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html)
 [^1-2]: [ConverseStream](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ConverseStream.html)
