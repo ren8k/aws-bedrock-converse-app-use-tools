@@ -3,12 +3,9 @@
 This repository presents a Python implementation of a chat application using Amazon Bedrock's Converse API (Converse [^1-1], ConverseStream [^1-2]), Tool use (function calling) [^1-3], and Streamlit.
 
 > [!NOTE]
-> We have posted an article on Qiita explaining this application and the Converse API and Tool use.
+> I have posted an article on Qiita explaining this application and the Converse API and Tool use.
 > Please check it out!
 > <br> [Learn Amazon Bedrock Converse API and Tool use from scratch and implement an advanced chat application](https://qiita.com/ren8k/items/64c4a3de56b886942251)
-
-> [!NOTE]
-> We have included notes on using Tool use with the Converse API and advanced topics in this document. Although it overlaps with the content posted on [Qiita](https://qiita.com/ren8k/items/64c4a3de56b886942251), it includes examples of code modifications when using CoT for tool request generation. Please take a look.
 
 <img src="./assets/demo.gif">
 
@@ -261,6 +258,9 @@ The implementation of this application is located directly under the `src/app` d
 ```
 
 ## References
+
+> [!NOTE]
+> We have included notes on using Tool use with the Converse API and advanced topics in [this document](https://github.com/ren8k/aws-bedrock-converse-app-use-tools/blob/main/assets/README.md). Although it overlaps with the content posted on [Qiita](https://qiita.com/ren8k/items/64c4a3de56b886942251), it includes examples of code modifications when using CoT for tool request generation. Please take a look.
 
 [^1-1]: [Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html)
 [^1-2]: [ConverseStream](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ConverseStream.html)
