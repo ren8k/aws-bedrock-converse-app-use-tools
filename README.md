@@ -31,7 +31,7 @@ On 2024/05/31, Amazon Bedrock released a new feature called the Converse API. Th
 
 ## Originality
 
-As of the writing date (2024/06/06), there are no chat applications in aws-samples or elsewhere that satisfy the following:
+As of the writing date (2024/06/06), there are no chat applications in [aws-samples-repositories](https://github.com/aws-samples) or elsewhere that satisfy the following:
 
 - Implementation combining ConverseStreamAPI and Tool use
 - Chat application using Streamlit's ChatUI
