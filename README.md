@@ -5,11 +5,10 @@
 > [!NOTE]
 > 本アプリおよび，Converse API や Tool use の解説記事を Qiita に投稿しております．
 > 是非そちらもご覧下さい！
-> <br>
-> [Amazon Bedrock Converse API と Tool use を知識ゼロから学び，発展的なチャットアプリを実装する](https://qiita.com/ren8k/items/64c4a3de56b886942251)
+> <br> > [Amazon Bedrock Converse API と Tool use を知識ゼロから学び，発展的なチャットアプリを実装する](https://qiita.com/ren8k/items/64c4a3de56b886942251)
 
 > [!NOTE]
-> Converse API で Tool use を利用する際の注意点や応用的な内容を，[本ドキュメント](https://github.com/ren8k/aws-bedrock-converse-app-use-tools/blob/main/assets/README.md)に移動しました．Qiita に記載した内容と重複してりますが，ツールリクエスト生成時に CoT を利用する際のコードの改修例などを記載しえとります．是非御覧ください．
+> Converse API で Tool use を利用する際の注意点や応用的な内容を，[本ドキュメント](https://github.com/ren8k/aws-bedrock-converse-app-use-tools/blob/main/assets/README.md)に記載しました．[Qiita に投稿した内容](https://qiita.com/ren8k/items/64c4a3de56b886942251)と重複してりますが，ツールリクエスト生成時に CoT を利用する際のコードの改修例などを記載しております．是非ご覧下さい．
 
 <img src="./assets/demo.gif">
 
@@ -231,7 +230,7 @@ class ToolsList:
 
 #### 3-3. システムプロンプトの利用切り替え
 
-トグルを ON にすると，`Converse API`および`ConverseStream API`の 引数`system`にシステムプロンプトを指定することができる．
+トグルを ON にすると，`Converse API`および`ConverseStream API`の 引数`system`にシステムプロンプトを指定することができる．Off にすると，システムプロンプトは指定されない．
 
 ## ディレクトリ構成およびコードの説明
 
