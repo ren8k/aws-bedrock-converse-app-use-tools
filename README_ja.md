@@ -31,7 +31,7 @@
 
 ## オリジナリティ
 
-執筆時点（2024/06/06）では，以下を満たすチャットアプリは aws-samples などには存在しない．
+執筆時点（2024/06/06）では，以下を満たすチャットアプリは [aws-samples](https://github.com/aws-samples) などには存在しない．
 
 - ConverseStreamAPI と Tool use を組合せた実装
 - Streamlit の ChatUI を利用したチャットアプリケーション
