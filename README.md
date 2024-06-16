@@ -260,7 +260,7 @@ The implementation of this application is located directly under the `src/app` d
 ## References
 
 > [!NOTE]
-> We have included notes on using Tool use with the Converse API and advanced topics in [this document](https://github.com/ren8k/aws-bedrock-converse-app-use-tools/blob/main/assets/README.md). Although it overlaps with the content posted on [Qiita](https://qiita.com/ren8k/items/64c4a3de56b886942251), it includes examples of code modifications when using CoT for tool request generation. Please take a look.
+> I have included notes on using Tool use with the Converse API and advanced topics in [this document](https://github.com/ren8k/aws-bedrock-converse-app-use-tools/blob/main/assets/README.md). Although it overlaps with the content posted on [Qiita](https://qiita.com/ren8k/items/64c4a3de56b886942251), it includes examples of code modifications when using CoT for tool request generation. Please take a look.
 
 [^1-1]: [Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html)
 [^1-2]: [ConverseStream](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ConverseStream.html)
