@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from googlesearch import search
+import time
 
 
 # https://github.com/aws-samples/amazon-bedrock-samples/blob/b64902625ea8ade362c0f7d1978428cecdcf47ed/function-calling/Function%20calling%20tool%20use%20with%20Converse%20API.ipynb#L7
@@ -18,6 +19,7 @@ class ToolsList:
         results.extend([r for r in search(search_term, 3, "en")])
         for j in results:
             response = requests.get(j)
+            time.sleep(1)
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, "html.parser")
                 response_list.append(soup.get_text().strip())
