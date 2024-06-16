@@ -1,11 +1,11 @@
-# Bedrock（with Converse API + Tool use）を利用したチャットアプリ<!-- omit in toc -->
+# Chat App using Bedrock (with Converse API + Tool use)<!-- omit in toc -->
 
-本リポジトリでは，Amazon Bedrock の Converse API (Converse [^1-1], ConverseStream[^1-2]) Tool use (function calling) [^1-3], Streamlit を利用したチャットアプリの python 実装を公開する．
+This repository presents a Python implementation of a chat application using Amazon Bedrock's Converse API (Converse [^1-1], ConverseStream [^1-2]), Tool use (function calling) [^1-3], and Streamlit.
 
 > [!NOTE]
-> 本アプリおよび，Converse API や Tool use の解説記事を Qiita に投稿しております．
-> 是非そちらもご覧下さい！
-> <br> > [Amazon Bedrock Converse API と Tool use を知識ゼロから学び，発展的なチャットアプリを実装する](https://qiita.com/ren8k/items/64c4a3de56b886942251)
+> We have posted an article on Qiita explaining this application and the Converse API and Tool use.
+> Please check it out!
+> <br> [Learn Amazon Bedrock Converse API and Tool use from scratch and implement an advanced chat application](https://qiita.com/ren8k/items/64c4a3de56b886942251)
 
 > [!NOTE]
 > Converse API で Tool use を利用する際の注意点や応用的な内容を，[本ドキュメント](https://github.com/ren8k/aws-bedrock-converse-app-use-tools/blob/main/assets/README.md)に記載しました．[Qiita に投稿した内容](https://qiita.com/ren8k/items/64c4a3de56b886942251)と重複してりますが，ツールリクエスト生成時に CoT を利用する際のコードの改修例などを記載しております．是非ご覧下さい．
