@@ -7,6 +7,9 @@ This repository presents a Python implementation of a chat application using Ama
 > Please check it out!
 > <br> [Learn Amazon Bedrock Converse API and Tool use from scratch and implement an advanced chat application](https://qiita.com/ren8k/items/64c4a3de56b886942251)
 
+> [!NOTE]
+> 日本語解説は[こちら](https://github.com/ren8k/aws-bedrock-converse-app-use-tools/blob/main/README_ja.md)です．
+
 <img src="./assets/demo.gif">
 
 ## Table of Contents<!-- omit in toc -->
