@@ -7,6 +7,9 @@ This repository presents a Python implementation of a chat application using Ama
 > Please check it out!
 > <br> [Learn Amazon Bedrock Converse API and Tool use from scratch and implement an advanced chat application](https://qiita.com/ren8k/items/64c4a3de56b886942251)
 
+> [!NOTE]
+> 日本語解説は[こちら](https://github.com/ren8k/aws-bedrock-converse-app-use-tools/blob/main/README_ja.md)です．
+
 <img src="./assets/demo.gif">
 
 ## Table of Contents<!-- omit in toc -->
@@ -90,6 +93,7 @@ The following sections describe each feature.
 
 It is possible to switch between regions (`us-west-2` or `us-east-1`) and models available with the Converse API. The models available in this implementation are as follows:
 
+- `anthropic.claude-3-5-sonnet-20240620-v1:0`
 - `anthropic.claude-3-haiku-20240307-v1:0`
 - `anthropic.claude-3-sonnet-20240229-v1:0`
 - `anthropic.claude-3-opus-20240229-v1:0`

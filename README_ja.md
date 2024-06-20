@@ -89,6 +89,7 @@ bash run_app.sh
 
 リージョン（`us-west-2` or `us-east-1`）および，Converse API で利用可能なモデルを切り替えることができる．本実装で利用可能なモデルは以下の通りである．
 
+- `anthropic.claude-3-5-sonnet-20240620-v1:0`
 - `anthropic.claude-3-haiku-20240307-v1:0`
 - `anthropic.claude-3-sonnet-20240229-v1:0`
 - `anthropic.claude-3-opus-20240229-v1:0`
